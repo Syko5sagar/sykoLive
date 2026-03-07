@@ -73,21 +73,17 @@ async function startApp(){
     document.getElementById("entry").style.display="none";
     await startCamera();
     
-    // ಸಾಗರ್, ಇಲ್ಲಿ ಅತ್ಯಂತ ಪವರ್‌ಫುಲ್ ಸರ್ವರ್ ಲಿಸ್ಟ್ ಆಡ್ ಮಾಡಿದ್ದೇನೆ (STUN & TURN):
+    // 1. ಅಪ್‌ಡೇಟ್ ಮಾಡಿದ ಪವರ್‌ಫುಲ್ Peer ಕಾನ್ಫಿಗರೇಶನ್
     peer = new Peer({
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' },
-                // ಹೆಚ್ಚುವರಿ ಪಬ್ಲಿಕ್ ಕನೆಕ್ಷನ್ ಸರ್ವರ್‌ಗಳು
                 { urls: 'stun:iphone-ice.apple.com:3478' }
             ],
             'sdpSemantics': 'unified-plan'
-        },
-        debug: 3
+        }
     });
     
     peer.on("open",id=>{
@@ -119,6 +115,7 @@ async function startCamera(){
     }catch(e){ alert("Camera permission required"); }
 }
 
+// 2. ರಿಯಲ್-ಟೈಮ್ ಅಪ್ಡೇಟ್ ಆಗುವ ಫೈಂಡ್ ಸ್ಟ್ರೇಂಜರ್ ಲಾಜಿಕ್
 function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
@@ -136,23 +133,26 @@ function findStranger(){
         });
 
         if(strangerId){
-            lobby.child(lobbyKey).remove();
-            connectToStranger(strangerId); 
+            // ಲಾಬಿಯಿಂದ ಐಡಿ ತೆಗೆದು ಕನೆಕ್ಟ್ ಮಾಡುವುದು
+            lobby.child(lobbyKey).remove().then(() => {
+                connectToStranger(strangerId); 
+            });
         } else {
+            // ಲಾಬಿಗೆ ಐಡಿ ಸೇರಿಸುವುದು
             const myLobbyRef = lobby.push(myId);
             myLobbyRef.onDisconnect().remove();
         }
     });
 }
 
+// 3. ಕನೆಕ್ಷನ್ ಸ್ಟ್ರಾಂಗ್ ಮಾಡಲು ಸಣ್ಣ ಡಿಲೇ
 function connectToStranger(id){
-    // ಕನೆಕ್ಷನ್ ಪವರ್‌ಫುಲ್ ಮಾಡಲು ಸಣ್ಣ ಡಿಲೇ (Delay)
     setTimeout(() => {
         currentCall = peer.call(id, myStream);
         setupCall(currentCall);
         conn = peer.connect(id);
         setupChat();
-    }, 500);
+    }, 600); 
 }
 
 function setupCall(call){ 
