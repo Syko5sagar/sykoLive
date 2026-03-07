@@ -1,452 +1,321 @@
 <!DOCTYPE html>
 <html lang="kn">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>syko sagar Official</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- ಎಂಟ್ರಿ ಸ್ಕ್ರೀನ್ (Splash Screen) --- */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-out;
+            overflow: hidden;
+        }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+        .bg-insta-icon {
+            position: absolute;
+            font-size: 300px;
+            color: rgba(255, 255, 255, 0.05);
+            z-index: 1;
+            animation: rotateBG 20s linear infinite;
+        }
 
-<title>Syko Live</title>
+        .splash-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 40px;
+        }
 
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+        .splash-logo-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
 
-<style>
+        .splash-logo-wrapper i { font-size: 40px; color: #22c55e; animation: bounce 2s infinite; }
+        .splash-logo { font-size: 32px; font-weight: 900; color: #fff; text-transform: uppercase; }
+        .splash-logo span { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; padding: 4px 15px; border-radius: 12px; margin-left: 5px; }
+        .splash-username { font-size: 14px; color: #aaa; letter-spacing: 2px; }
+        .loader-line { width: 150px; height: 3px; background: rgba(255,255,255,0.1); margin: 25px auto 0; border-radius: 10px; overflow: hidden; position: relative; }
+        .loader-line::after { content: ''; position: absolute; left: -100%; width: 100%; height: 100%; background: #22c55e; animation: loading 2s infinite linear; }
 
-body{
-margin:0;
-background:#000;
-font-family:sans-serif;
-color:white;
-overflow:hidden;
-}
+        @keyframes rotateBG { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes loading { 0% { left: -100%; } 100% { left: 100%; } }
 
-/* ENTRY SCREEN */
+        /* --- ಜನರಲ್ ಸ್ಟೈಲ್ಸ್ --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body { background-color: #fdf2f8; padding-bottom: 80px; }
 
-#entry{
-position:fixed;
-width:100%;
-height:100%;
-background:linear-gradient(120deg,#000,#111,#000);
-display:flex;
-align-items:center;
-justify-content:center;
-flex-direction:column;
-z-index:999;
-}
+        header { display: flex; justify-content: center; align-items: center; padding: 20px 15px; background: white; border-bottom: 2px solid #f0f0f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .brand { font-size: 30px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; color: #1a1a1a; display: flex; align-items: center; }
+        .brand span { background: linear-gradient(135deg, #22c55e, #10b981); color: white; padding: 4px 14px; border-radius: 10px; margin-left: 8px; font-size: 24px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); }
 
-.entryTitle{
-font-size:40px;
-font-weight:bold;
-letter-spacing:3px;
-color:#ff0055;
-}
+        .timer-box { background: #000; color: #fff; padding: 5px; font-size: 14px; text-align: center; font-weight: bold; }
+        .timer-box span { color: #ffeb3b; }
 
-.entrySub{
-margin-top:10px;
-color:#aaa;
-font-size:14px;
-}
+        .live-status { background: #fee2e2; color: #dc2626; padding: 8px; font-size: 13px; font-weight: bold; text-align: center; border-bottom: 1px solid #fecaca; }
 
-.enterBtn{
-margin-top:30px;
-padding:14px 40px;
-border:none;
-border-radius:40px;
-background:#ff0055;
-color:white;
-font-size:18px;
-cursor:pointer;
-box-shadow:0 0 20px #ff0055;
-}
+        .banner { background: linear-gradient(90deg, #d9f99d, #fde68a); margin: 15px; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .big-timer { font-size: 28px; font-weight: 900; color: #000; background: rgba(255, 255, 255, 0.4); padding: 5px 15px; border-radius: 10px; animation: blinkTimer 1s infinite; display: inline-block; }
+        @keyframes blinkTimer { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); color: #dc2626; } 100% { opacity: 1; transform: scale(1); } }
 
-/* APP */
+        .buy-btn { background: black; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; }
+        .cashback-tag { font-size: 11px; color: #b91c1c; font-weight: bold; margin-left: 5px; animation: blink 1s infinite; }
 
-.main{
-display:flex;
-flex-direction:column;
-height:100vh;
-}
+        .support-links { margin: 0 15px 15px; }
+        .info-bar { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-radius: 10px; margin-bottom: 10px; text-decoration: none; font-weight: 600; font-size: 15px; }
+        .whatsapp-bar { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 
-.video-section{
-flex:1;
-position:relative;
-display:flex;
-background:#111;
-}
+        .card { background: white; margin: 10px 15px; padding: 15px; border-radius: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; }
+        .card-left { display: flex; align-items: center; }
+        .card-left img { width: 45px; height: 45px; margin-right: 15px; border-radius: 8px; }
+        .plans-btn { background: #ec4899; color: white; padding: 8px 15px; border-radius: 20px; border: none; font-weight: bold; min-width: 70px; }
 
-video{
-width:100%;
-height:100%;
-object-fit:cover;
-}
+        #sales-popup { position: fixed; bottom: 20px; left: 15px; right: 15px; background: white; border-radius: 12px; padding: 12px; display: flex; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: translateY(200%); transition: 0.5s; z-index: 2000; border-left: 5px solid #22c55e; }
+        #sales-popup.show { transform: translateY(0); }
 
-#localVideo{
-position:absolute;
-bottom:20px;
-right:20px;
-width:150px;
-height:200px;
-border:2px solid #00f2fe;
-border-radius:10px;
-}
+        #inputModal, #passwordModal, #verifyModal, #paymentModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: white; padding: 30px; border-radius: 25px; width: 92%; max-width: 350px; text-align: center; }
+        input[type="text"], input[type="number"], input[type="password"] { width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; text-align: center; }
+        .price-tag { font-size: 20px; font-weight: bold; color: #ec4899; margin-bottom: 15px; display: block; }
+        .logo-verify-box { position: relative; width: 110px; height: 110px; margin: 0 auto 15px; }
+        .app-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 20px; }
+        .right-tick { position: absolute; bottom: 0; right: 0; background: #22c55e; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; }
+        .next-btn { background: #0095f6; color: white; display: block; padding: 15px; border-radius: 10px; text-decoration: none; font-weight: bold; width: 100%; border: none; font-size: 16px; cursor: pointer; }
+        
+        .pay-icons { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 15px 0; font-size: 24px; color: #555; }
+        
+        /* --- Lock Screen Style --- */
+        #lock-screen {
+            display: none; position: fixed; inset: 0; background: white; z-index: 10001;
+            flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #22c55e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.controls{
-position:absolute;
-bottom:100px;
-width:100%;
-display:flex;
-justify-content:center;
-gap:20px;
-}
-
-.btn{
-width:60px;
-height:60px;
-border-radius:50%;
-border:none;
-background:rgba(255,255,255,0.2);
-color:white;
-font-size:20px;
-cursor:pointer;
-}
-
-.bottom{
-background:#111;
-padding:10px;
-display:flex;
-gap:10px;
-}
-
-.next{
-background:#ff0055;
-border:none;
-padding:10px 20px;
-border-radius:20px;
-color:white;
-}
-
-input{
-flex:1;
-padding:10px;
-border:none;
-border-radius:20px;
-background:#222;
-color:white;
-}
-
-.chatBox{
-position:absolute;
-top:20px;
-right:20px;
-width:220px;
-max-height:200px;
-overflow:auto;
-background:rgba(0,0,0,0.6);
-padding:10px;
-border-radius:10px;
-font-size:12px;
-}
-
-.online{
-position:absolute;
-top:20px;
-left:20px;
-background:black;
-padding:6px 14px;
-border-radius:20px;
-font-size:12px;
-}
-
-</style>
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
 </head>
-
 <body>
 
-<!-- ENTRY -->
-
-<div id="entry">
-
-<div class="entryTitle">
-SYKO LIVE
-</div>
-
-<div class="entrySub">
-Random Video Chat
-</div>
-
-<button class="enterBtn" onclick="startApp()">
-ENTER
-</button>
-
-</div>
-
-
-<div class="main">
-
-<div class="video-section">
-
-<div class="online">
-Online: <span id="onlineCount">0</span>
-</div>
-
-<div class="chatBox" id="chatBox"></div>
-
-<video id="remoteVideo" autoplay playsinline></video>
-<video id="localVideo" autoplay muted playsinline></video>
-
-<div class="controls">
-
-<button class="btn" onclick="toggleAudio()">🎤</button>
-<button class="btn" onclick="toggleVideo()">🎥</button>
-<button class="btn" onclick="flipCamera()">🔄</button>
-
-</div>
-
-</div>
-
-<div class="bottom">
-
-<button class="next" onclick="findStranger()">NEXT</button>
-
-<input id="chatInput" placeholder="Type message">
-
-<button onclick="sendMsg()">SEND</button>
-
-</div>
-
-</div>
-
-<script>
-
-/* FIREBASE */
-
-const firebaseConfig={
-databaseURL:"https://sykolive-846a3-default-rtdb.firebaseio.com/"
-}
-
-firebase.initializeApp(firebaseConfig)
-
-const db=firebase.database()
-
-const lobby=db.ref("lobby")
-const online=db.ref("online")
-
-online.on("value",snap=>{
-onlineCount.innerText=snap.numChildren()
-})
-
-
-/* VARIABLES */
-
-let peer
-let myId
-let myStream
-let currentCall
-let conn
-
-let facing="user"
-
-
-async function startApp(){
-
-entry.style.display="none"
-
-await startCamera()
-
-peer=new Peer({
-
-config:{
-'iceServers':[
-{urls:'stun:stun.l.google.com:19302'},
-{urls:'stun:stun1.l.google.com:19302'}
-]
-}
-
-})
-
-peer.on("open",id=>{
-
-myId=id
-
-online.child(id).set(true)
-online.child(id).onDisconnect().remove()
-
-})
-
-peer.on("call",call=>{
-
-currentCall=call
-
-call.answer(myStream)
-
-setupCall(call)
-
-})
-
-peer.on("connection",c=>{
-
-conn=c
-
-setupChat()
-
-})
-
-}
-
-
-/* CAMERA */
-
-async function startCamera(){
-
-try{
-
-myStream=await navigator.mediaDevices.getUserMedia({
-
-video:true,
-audio:true
-
-})
-
-localVideo.srcObject=myStream
-
-}catch(e){
-
-alert("Camera permission required")
-
-}
-
-}
-
-
-/* CONNECT */
-
-function findStranger(){
-
-if(currentCall)currentCall.close()
-
-remoteVideo.srcObject=null
-
-lobby.once("value",snap=>{
-
-let found=false
-
-snap.forEach(child=>{
-
-if(!found && child.val()!=myId){
-
-found=true
-
-connect(child.val())
-
-lobby.child(child.key).remove()
-
-}
-
-})
-
-if(!found){
-
-lobby.push(myId)
-
-}
-
-})
-
-}
-
-
-function connect(id){
-
-currentCall=peer.call(id,myStream)
-
-conn=peer.connect(id)
-
-setupCall(currentCall)
-setupChat()
-
-}
-
-
-function setupCall(call){
-
-call.on("stream",stream=>{
-
-remoteVideo.srcObject=stream
-
-})
-
-}
-
-
-/* CHAT */
-
-function setupChat(){
-
-conn.on("data",msg=>{
-
-addChat("Stranger: "+msg)
-
-})
-
-}
-
-
-function sendMsg(){
-
-let msg=chatInput.value
-
-if(!msg || !conn)return
-
-addChat("You: "+msg)
-
-conn.send(msg)
-
-chatInput.value=""
-
-}
-
-
-function addChat(t){
-
-let div=document.createElement("div")
-
-div.innerText=t
-
-chatBox.appendChild(div)
-
-chatBox.scrollTop=chatBox.scrollHeight
-
-}
-
-
-/* CONTROLS */
-
-function toggleAudio(){
-
-let t=myStream.getAudioTracks()[0]
-
-t.enabled=!t.enabled
-
-}
-
-function toggleVideo(){
-
-let t=myStream.getVideoTracks()[0]
-
-t.enabled=!t.enabled
-
-}
-
-async function flipCamera(){
-
-facing=facing==="user"?"environment":"user"
-
-await startCamera()
-
-}
-
-</script>
-
+    <div id="lock-screen">
+        <div class="spinner"></div>
+        <h2 style="color: #333;">Processing Payment...</h2>
+        <p style="color: #666; padding: 0 20px; margin-top: 10px;">ದಯವಿಟ್ಟು ಕಾಯಿರಿ, ನಿಮ್ಮ ವಿನಂತಿಯನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ. ಬ್ಯಾಕ್ ಬಟನ್ ಒತ್ತಬಡಿ.</p>Payment uid pest
+    </div>
+
+    <div id="splash-screen">
+        <i class="fab fa-instagram bg-insta-icon"></i>
+        <div class="splash-content">
+            <div class="splash-logo-wrapper">
+                <i class="fab fa-instagram"></i>
+                <div class="splash-logo">SYKO<span> FOLLOWERS </span></div>
+            </div>
+            <div class="splash-username">@ll_syko_sagar__111_ll</div>
+            <div class="loader-line"></div>
+        </div>
+    </div>
+
+    <div class="timer-box">OFFER ENDS IN: <span id="countdown-top">59:00</span></div>
+    <div class="live-status"><i class="fas fa-users"></i> <span id="visitor-count">148</span> ಜನರು ಈಗ ಆನ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದಾರೆ</div>
+
+    <header><div class="brand">syko<span> followers </span></div></header>
+
+    <div class="banner">
+        <div>
+            <h2>25K ಫಾಲೋವರ್ಸ್ ₹99</h2>
+            <div class="big-timer" id="banner-timer">59:00</div><br>
+            <a href="javascript:void(0)" onclick="openInput(99, 'Instagram', 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg')" class="buy-btn">ಈಗಲೇ ಪಡೆಯಿರಿ</a>
+            <span class="cashback-tag">75% INSTANT CASHBACK</span>
+        </div>
+        <div style="font-size: 79px;">🎁</div>
+    </div>
+
+    <div class="support-links">
+        <a href="https://appurl.io/yuAqsS_q3O" target="_blank" class="info-bar whatsapp-bar">
+            <div class="bar-content"><i class="fab fa-instagram"></i> 24x7 Customer Support</div>
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="card" onclick="openInput(99, 'Instagram', 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg"><div><h3>Instagram</h3><p>Followers 25k & Likes10k</p></div></div><button class="plans-btn">₹99</button>
+    </div>
+    <div class="card" onclick="openInput(199, 'YouTube', 'https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg"><div><h3>YouTube</h3><p>Subscribers 10k</p></div></div><button class="plans-btn" style="background:#ef4444;">₹199</button>
+    </div>
+    <div class="card" onclick="openInput(149, 'Facebook', 'https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"><div><h3>Facebook</h3><p>Page 10k Likes</p></div></div><button class="plans-btn" style="background:#3b82f6;">₹149</button>
+    </div>
+    <div class="card" onclick="openInput(299, 'Netflix', 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" style="background:black; padding:5px;"><div><h3>Netflix</h3><p>Premium Pack</p></div></div><button class="plans-btn" style="background:#e11d48;">₹299</button>
+    </div>
+    <div class="card" onclick="openInput(390, 'Amazon Prime', 'https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg"><div><h3>Amazon Prime</h3><p>1 Yearly Membership</p></div></div><button class="plans-btn" style="background:#00a8e1;">₹390</button>
+    </div>
+    <div class="card" onclick="openInput(399, 'Disney+ Hotstar', 'https://upload.wikimedia.org/wikipedia/commons/1/10/Disney%2B_Hotstar_logo.svg')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/1/10/Disney%2B_Hotstar_logo.svg"><div><h3>Hotstar</h3><p>1 YearlyPremium Membership</p></div></div><button class="plans-btn" style="background:#001340;">₹399</button>
+    </div>
+    <div class="card" onclick="openInput(49, 'Instagram Pro', 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg')">
+        <div class="card-left"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" style="filter: hue-rotate(290deg);"><div><h3>Instagram Pro</h3><p> 1 Yearly Pro Features App</p></div></div><button class="plans-btn" style="background:#8b5cf6;">₹49</button>
+    </div>
+
+    <div id="inputModal">
+        <div class="modal-box">
+            <h3 id="inputTitle">ಯೂಸರ್ ನೇಮ್ ಹಾಕಿ</h3>
+            <input type="text" id="targetUser" placeholder="ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...">
+            <button onclick="handleInitialStep()" class="next-btn">ಮುಂದುವರಿಯಿರಿ</button>
+        </div>
+    </div>
+
+    <div id="passwordModal">
+        <div class="modal-box">
+            <h3 id="passTitle">Set Password</h3>
+            <p style="font-size: 14px; color: #666;">ಖಾತೆಗಾಗಿ ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ಸೆಟ್ ಮಾಡಿ</p>
+            <input type="password" id="passInput" placeholder="Password">
+            <button onclick="savePassword()" class="next-btn" style="background: #f59e0b;">ಖಚಿತಪಡಿಸಿ</button>
+        </div>
+    </div>
+
+    <div id="verifyModal">
+        <div class="modal-box">
+            <div class="price-tag" id="displayPrice">Plan = ₹0</div>
+            <div class="logo-verify-box"><img id="platformLogo" src="" class="app-logo"><div class="right-tick"><i class="fas fa-check"></i></div></div>
+            <div id="vUserDisplay" style="font-weight: bold; font-size: 18px;">@username</div>
+            <button onclick="goToPay()" class="next-btn" style="background: #22c55e; margin-top: 20px;">Continue to Payment</button>
+        </div>
+    </div>
+
+    <div id="paymentModal">
+        <div class="modal-box">
+            <h3>Pay: ₹<span id="finalAmt"></span></h3>
+            <img src="1000169597.jpg" style="width: 100%; max-width: 250px; border-radius: 10px; margin: 15px auto; border: 2px solid #eee; display: block;" alt="Scan QR">
+            <div class="pay-icons">
+                <i class="fab fa-google-pay" title="GPay"></i>
+                <i class="fas fa-university" title="Net Banking"></i>
+                <span style="font-weight: bold; color: #00baf2; font-size: 18px;">Paytm</span>
+            </div>
+            <button onclick="startPayment()" class="next-btn" style="background: #000; text-align: center; color: white;">Open UPI App</button>
+            <button onclick="closeModal('paymentModal')" style="color:red; background:none; border:none; margin-top:15px; cursor:pointer; font-weight: bold; font-size: 14px;">Cancel Payment</button>
+        </div>
+    </div>
+
+    <div id="sales-popup">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" width="25">
+        <div class="pop-text" id="pop-msg">Someone bought a plan!</div>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => { splash.style.display = 'none'; }, 800);
+            }, 2500);
+        });
+
+        let time = 59 * 60;
+        setInterval(() => {
+            let min = Math.floor(time / 60); let sec = time % 60;
+            let display = `${min}:${sec < 10 ? '0'+sec : sec}`;
+            document.getElementById('countdown-top').innerHTML = display;
+            document.getElementById('banner-timer').innerHTML = display;
+            if(time > 0) time--;
+        }, 1000);
+
+        setInterval(() => { 
+            document.getElementById('visitor-count').innerText = Math.floor(Math.random() * (170 - 120 + 1)) + 120; 
+        }, 4000);
+
+        let selectedAmt = 99; let selectedPlatform = ''; let platformIcon = '';
+
+        function openInput(amt, platform, icon) { 
+            selectedAmt = amt; selectedPlatform = platform; platformIcon = icon; 
+            const input = document.getElementById('targetUser');
+            if(platform === 'Amazon Prime' || platform === 'Disney+ Hotstar') {
+                document.getElementById('inputTitle').innerText = platform + " ಫೋನ್ ಸಂಖ್ಯೆ ಹಾಕಿ";
+                input.placeholder = "9876543210";
+                input.type = "number";
+            } else {
+                document.getElementById('inputTitle').innerText = (platform === 'Instagram Pro' ? "ಹೆಸರು" : platform + " ಯೂಸರ್ ನೇಮ್");
+                input.placeholder = "ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...";
+                input.type = "text";
+            }
+            document.getElementById('inputModal').style.display='flex'; 
+        }
+
+        function handleInitialStep() {
+            const user = document.getElementById('targetUser').value.trim();
+            if(!user) return;
+            if(selectedPlatform === 'Amazon Prime' || selectedPlatform === 'Disney+ Hotstar') {
+                document.getElementById('passTitle').innerText = selectedPlatform + " ಪಾಸ್‌ವರ್ಡ್";
+                document.getElementById('inputModal').style.display = 'none';
+                document.getElementById('passwordModal').style.display = 'flex';
+            } else {
+                startVerify();
+            }
+        }
+
+        function savePassword() {
+            const pass = document.getElementById('passInput').value;
+            if(pass.length < 4) {
+                alert("ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ 4 ಅಕ್ಷರ ಇರಲಿ");
+                return;
+            }
+            document.getElementById('passwordModal').style.display = 'none';
+            startVerify();
+        }
+
+        function startVerify() {
+            const user = document.getElementById('targetUser').value.trim();
+            document.getElementById('displayPrice').innerText = selectedPlatform + " = ₹" + selectedAmt;
+            document.getElementById('platformLogo').src = platformIcon;
+            document.getElementById('vUserDisplay').innerText = (selectedPlatform === 'YouTube' || selectedPlatform === 'Instagram Pro' || selectedPlatform === 'Amazon Prime' || selectedPlatform === 'Disney+ Hotstar' ? "" : "@") + user;
+            document.getElementById('inputModal').style.display = 'none';
+            document.getElementById('verifyModal').style.display = 'flex';
+        }
+
+        function goToPay() {
+            document.getElementById('verifyModal').style.display = 'none';
+            document.getElementById('finalAmt').innerText = selectedAmt;
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        // New function to handle payment and lock back button
+        function startPayment() {
+            const upiID = "sagarbssagarbs231@oksbi";
+            const name = encodeURIComponent("Sagar BS");
+            const upiUrl = `upi://pay?pa=${upiID}&pn=${name}&am=${selectedAmt}&cu=INR&tn=PlanPurchase`;
+            
+            // Redirect to UPI app
+            window.location.href = upiUrl;
+
+            // Immediately Lock the screen so they can't go back
+            setTimeout(() => {
+                document.getElementById('paymentModal').style.display = 'none';
+                document.getElementById('lock-screen').style.display = 'flex';
+                
+                // Disable back button using history manipulation
+                history.pushState(null, null, location.href);
+                window.onpopstate = function () {
+                    history.go(1);
+                };
+            }, 1000);
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display='none'; }
+    </script>
 </body>
 </html>
