@@ -73,7 +73,7 @@ async function startApp(){
     document.getElementById("entry").style.display="none";
     await startCamera();
     
-    // 1. ಅಪ್‌ಡೇಟ್ ಮಾಡಿದ ಪವರ್‌ಫುಲ್ Peer ಕಾನ್ಫಿಗರೇಶನ್
+    // PeerJS ಕಾನ್ಫಿಗರೇಶನ್ ಅಪ್‌ಡೇಟ್ ಮಾಡಲಾಗಿದೆ
     peer = new Peer({
         config: {
             'iceServers': [
@@ -93,6 +93,7 @@ async function startApp(){
         findStranger();
     });
 
+    // ಯಾರಾದರೂ ಕಾಲ್ ಮಾಡಿದರೆ ಇಲ್ಲಿ ರಿಸೀವ್ ಆಗುತ್ತದೆ
     peer.on("call",call=>{ 
         currentCall=call; 
         call.answer(myStream); 
@@ -115,7 +116,7 @@ async function startCamera(){
     }catch(e){ alert("Camera permission required"); }
 }
 
-// 2. ರಿಯಲ್-ಟೈಮ್ ಅಪ್ಡೇಟ್ ಆಗುವ ಫೈಂಡ್ ಸ್ಟ್ರೇಂಜರ್ ಲಾಜಿಕ್
+// ರಿಯಲ್-ಟೈಮ್ ಕನೆಕ್ಷನ್ ಲಾಜಿಕ್ (ಇದು ವಿಡಿಯೋ ಕಾಲ್ ಕನೆಕ್ಟ್ ಮಾಡುತ್ತದೆ)
 function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
@@ -133,26 +134,33 @@ function findStranger(){
         });
 
         if(strangerId){
-            // ಲಾಬಿಯಿಂದ ಐಡಿ ತೆಗೆದು ಕನೆಕ್ಟ್ ಮಾಡುವುದು
+            // ಎದುರಿಗಿರುವವರು ಸಿಕ್ಕಿದರೆ ಅವರನ್ನು ಲಾಬಿಯಿಂದ ತೆಗೆದು ಕಾಲ್ ಮಾಡು
             lobby.child(lobbyKey).remove().then(() => {
                 connectToStranger(strangerId); 
             });
         } else {
-            // ಲಾಬಿಗೆ ಐಡಿ ಸೇರಿಸುವುದು
+            // ಯಾರೂ ಇಲ್ಲದಿದ್ದರೆ ಲಾಬಿಯಲ್ಲಿ ವೇಯ್ಟ್ ಮಾಡು
             const myLobbyRef = lobby.push(myId);
             myLobbyRef.onDisconnect().remove();
+            
+            // ಲೈವ್ ಆಗಿ ಯಾರಾದರೂ ಬರ್ತಾರಾ ಅಂತ ನೋಡ್ತಾ ಇರು
+            lobby.on("child_added", newSnap => {
+                if(newSnap.val() !== myId){
+                    lobby.off("child_added");
+                    findStranger(); // ಯಾರಾದರೂ ಬಂದ ಕೂಡಲೇ ಕನೆಕ್ಟ್ ಮಾಡು
+                }
+            });
         }
     });
 }
 
-// 3. ಕನೆಕ್ಷನ್ ಸ್ಟ್ರಾಂಗ್ ಮಾಡಲು ಸಣ್ಣ ಡಿಲೇ
 function connectToStranger(id){
     setTimeout(() => {
         currentCall = peer.call(id, myStream);
         setupCall(currentCall);
         conn = peer.connect(id);
         setupChat();
-    }, 600); 
+    }, 800); 
 }
 
 function setupCall(call){ 
