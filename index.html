@@ -111,7 +111,9 @@ function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
     document.getElementById("remoteVideo").srcObject = null;
-    
+    lobby.off(); 
+
+    // ಆಟೋಮ್ಯಾಟಿಕ್ ಆಗಿ ಆನ್‌ಲೈನ್ ಇರುವವರನ್ನು ಹುಡುಕಿ ಕನೆಕ್ಟ್ ಮಾಡುತ್ತದೆ
     lobby.once("value", snap => {
         let strangerId = null;
         let lobbyKey = null;
@@ -124,20 +126,17 @@ function findStranger(){
         });
 
         if(strangerId){
-            // ಇಲ್ಲಿ ಬದಲಾವಣೆ ಮಾಡಲಾಗಿದೆ: ಮೊದಲು ಲಾಬಿಯಿಂದ ಆ ಐಡಿ ತೆಗೆದು ಕನೆಕ್ಟ್ ಮಾಡು
             lobby.child(lobbyKey).remove().then(() => {
                 connectToStranger(strangerId); 
             });
         } else {
-            // ಲಾಬಿಗೆ ಐಡಿ ಹಾಕಿ ವೇಯ್ಟ್ ಮಾಡು
             const myLobbyRef = lobby.push(myId);
             myLobbyRef.onDisconnect().remove();
-            
-            // ಲೈವ್ ಆಗಿ ಯಾರಾದರೂ ಬಂದರೆ ತಕ್ಷಣ ಫೈಂಡ್ ಸ್ಟ್ರೇಂಜರ್ ರನ್ ಮಾಡು
+
             lobby.on("child_added", newSnap => {
                 if(newSnap.val() !== myId){
-                    lobby.off("child_added");
-                    findStranger();
+                    lobby.off();
+                    findStranger(); 
                 }
             });
         }
@@ -150,7 +149,6 @@ function connectToStranger(id){
         setupCall(currentCall);
         conn = peer.connect(id);
         setupChat();
-        addChat("System: Connected!");
     }, 1000); 
 }
 
