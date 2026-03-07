@@ -218,9 +218,16 @@ async function startApp(){
     document.getElementById("entry").style.display="none"
     await startCamera()
     
-    peer=new Peer({
-        config:{ 'iceServers':[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}] }
-    })
+    // ಸಾಗರ್, ಈ ಭಾಗದಲ್ಲಿ ನಿನ್ನ ಹೊಸ STUN ಸರ್ವರ್ ಕೋಡ್ ಹಾಕಿದ್ದೇನೆ:
+    peer = new Peer({
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        }
+    });
     
     peer.on("open",id=>{
         myId=id
@@ -247,7 +254,6 @@ async function startCamera(){
     }catch(e){ alert("Camera permission required") }
 }
 
-// ಸಾಗರ್, ನೀನು ಹೇಳಿದ ಹೊಸ ಲಾಜಿಕ್ ಇಲ್ಲಿದೆ:
 function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
