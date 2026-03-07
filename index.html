@@ -107,11 +107,13 @@ async function startCamera(){
     }catch(e){ alert("Camera permission required"); }
 }
 
+// ಡೈರೆಕ್ಟ್ ಆಗಿ ಯಾರು ಆನ್‌ಲೈನ್ ಇರ್ತಾರೋ ಅವರಿಗೆ ಕನೆಕ್ಟ್ ಮಾಡುವ ಆಟೋ ಲಾಜಿಕ್
 function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
     document.getElementById("remoteVideo").srcObject = null;
-    
+    lobby.off(); 
+
     lobby.once("value", snap => {
         let strangerId = null;
         let lobbyKey = null;
@@ -124,20 +126,20 @@ function findStranger(){
         });
 
         if(strangerId){
-            // ಇಲ್ಲಿ ಬದಲಾವಣೆ ಮಾಡಲಾಗಿದೆ: ಮೊದಲು ಲಾಬಿಯಿಂದ ಆ ಐಡಿ ತೆಗೆದು ಕನೆಕ್ಟ್ ಮಾಡು
+            // ಯಾರಾದರೂ ಆನ್‌ಲೈನ್ ಇದ್ದರೆ ತಕ್ಷಣ ಅವರನ್ನ ಲಾಬಿಯಿಂದ ತೆಗೆದು ಕನೆಕ್ಟ್ ಮಾಡು
             lobby.child(lobbyKey).remove().then(() => {
                 connectToStranger(strangerId); 
             });
         } else {
-            // ಲಾಬಿಗೆ ಐಡಿ ಹಾಕಿ ವೇಯ್ಟ್ ಮಾಡು
+            // ಯಾರೂ ಇಲ್ಲದಿದ್ದರೆ ಸುಮ್ಮನೆ ಲಾಬಿಯಲ್ಲಿ ನಿನ್ನ ಐಡಿ ಸೇರಿಸು (ಬ್ಯಾಕ್‌ಗ್ರೌಂಡ್‌ನಲ್ಲಿ)
             const myLobbyRef = lobby.push(myId);
             myLobbyRef.onDisconnect().remove();
-            
-            // ಲೈವ್ ಆಗಿ ಯಾರಾದರೂ ಬಂದರೆ ತಕ್ಷಣ ಫೈಂಡ್ ಸ್ಟ್ರೇಂಜರ್ ರನ್ ಮಾಡು
+
+            // ಲೈವ್ ಆಗಿ ಯಾರಾದರೂ ಅಪ್ಲಿಕೇಶನ್ ಓಪನ್ ಮಾಡಿದ ತಕ್ಷಣ ಸಿಸ್ಟಮ್ ಅವರಿಬ್ಬರನ್ನ ಕನೆಕ್ಟ್ ಮಾಡುತ್ತದೆ
             lobby.on("child_added", newSnap => {
                 if(newSnap.val() !== myId){
-                    lobby.off("child_added");
-                    findStranger();
+                    lobby.off();
+                    findStranger(); 
                 }
             });
         }
@@ -150,7 +152,6 @@ function connectToStranger(id){
         setupCall(currentCall);
         conn = peer.connect(id);
         setupChat();
-        addChat("System: Connected!");
     }, 1000); 
 }
 
@@ -188,6 +189,11 @@ async function flipCamera(){
     facing = facing === "user" ? "environment" : "user"; 
     myStream.getTracks().forEach(track => track.stop());
     await startCamera();
+    if(currentCall && currentCall.peerConnection) {
+        let videoTrack = myStream.getVideoTracks()[0];
+        let sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
+        if(sender) sender.replaceTrack(videoTrack);
+    }
 }
 </script>
 </body>
