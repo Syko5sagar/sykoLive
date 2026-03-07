@@ -210,7 +210,6 @@ const db=firebase.database()
 const lobby=db.ref("lobby")
 const online=db.ref("online")
 
-// ಆನ್‌ಲೈನ್ ಕೌಂಟ್ ಅಪ್‌ಡೇಟ್
 online.on("value",snap=>{ document.getElementById("onlineCount").innerText=snap.numChildren() })
 
 let peer, myId, myStream, currentCall, conn, facing="user";
@@ -229,14 +228,12 @@ async function startApp(){
         online.child(id).onDisconnect().remove()
     })
 
-    // ಯಾರಾದರೂ ನಮಗೆ ಕಾಲ್ ಮಾಡಿದಾಗ (Inbound)
     peer.on("call",call=>{ 
         currentCall=call; 
         call.answer(myStream); 
         setupCall(call); 
     })
 
-    // ಚಾಟ್ ಕನೆಕ್ಷನ್ ಬಂದಾಗ
     peer.on("connection",c=>{ 
         conn=c; 
         setupChat(); 
@@ -250,42 +247,32 @@ async function startCamera(){
     }catch(e){ alert("Camera permission required") }
 }
 
+// ಸಾಗರ್, ನೀನು ಹೇಳಿದ ಹೊಸ ಲಾಜಿಕ್ ಇಲ್ಲಿದೆ:
 function findStranger(){
-    // ಹಳೆಯ ಕಾಲ್ ಮತ್ತು ಚಾಟ್ ಕ್ಲೋಸ್ ಮಾಡು
-    if(currentCall) currentCall.close()
-    if(conn) conn.close()
-    document.getElementById("remoteVideo").srcObject=null
+    if(currentCall) currentCall.close();
+    if(conn) conn.close();
+    document.getElementById("remoteVideo").srcObject = null;
     
-    // ಲಾಬಿಯಲ್ಲಿ ಯಾರಿದ್ದಾರೆ ಎಂದು ಚೆಕ್ ಮಾಡು
     lobby.once("value", snap => {
         let strangerId = null;
-        let found = false;
-        
         snap.forEach(child => {
-            if(!found && child.val() !== myId){
+            if(child.val() !== myId){
                 strangerId = child.val();
-                found = true;
-                lobby.child(child.key).remove(); // ಸಿಕ್ಕಿದವರ ಐಡಿಯನ್ನು ಲಾಬಿಯಿಂದ ತೆಗೆಯುವುದು
+                lobby.child(child.key).remove(); 
             }
         });
 
-        if(found && strangerId){
-            // ಬೇರೆಯವರು ಸಿಕ್ಕಿದರೆ ಅವರಿಗೆ ನಾವು ಕಾಲ್ ಮಾಡುವುದು
-            connectToStranger(strangerId);
+        if(strangerId){
+            connectToStranger(strangerId); 
         } else {
-            // ಯಾರೂ ಇಲ್ಲದಿದ್ದರೆ ನಮ್ಮ ಐಡಿಯನ್ನು ಲಾಬಿಯಲ್ಲಿ ಹಾಕುವುದು
-            const myRef = lobby.push(myId);
-            myRef.onDisconnect().remove();
+            lobby.push(myId); 
         }
     });
 }
 
 function connectToStranger(id){
-    // ವೀಡಿಯೊ ಕರೆ
     currentCall = peer.call(id, myStream);
     setupCall(currentCall);
-    
-    // ಮೆಸೇಜ್ ಕನೆಕ್ಷನ್
     conn = peer.connect(id);
     setupChat();
 }
