@@ -10,39 +10,38 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-body{ margin:0; background:#000; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:white; overflow:hidden; height: 100vh; }
+body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100vh; }
 
-/* ಸಾಗರ್, ಇಲ್ಲಿ ಎಂಟ್ರಿ ಅನಿಮೇಷನ್ ಡಿಸೈನ್ ಇದೆ */
+/* 1. ಎಂಟ್ರಿ ಅನಿಮೇಷನ್ ಡಿಸೈನ್ (3 Seconds) */
 #entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:999; }
-.logo-container { display: flex; gap: 10px; }
+.logo-container { display: flex; gap: 8px; }
 .letter {
-    font-size: 50px; font-weight: 900; color: #ff0055;
-    text-shadow: 0 0 20px #ff0055; opacity: 0;
-    transform: translateY(20px);
-    animation: reveal 0.4s forwards;
+    font-size: 45px; font-weight: bold; color: #ff0055;
+    text-shadow: 0 0 15px #ff0055; opacity: 0;
+    transform: scale(0.5);
+    animation: bounceIn 0.5s forwards;
 }
-@keyframes reveal {
-    to { opacity: 1; transform: translateY(0); }
+@keyframes bounceIn {
+    to { opacity: 1; transform: scale(1); }
 }
 
 .main{ display:flex; flex-direction:column; height:100vh; }
 .video-section{ flex:1; position:relative; display:flex; background:#111; }
 video{ width:100%; height:100%; object-fit:cover; background:#000; }
 
-/* ಲೋಕಲ್ ವೀಡಿಯೊ ಡಿಸೈನ್ */
-#localVideo{ position:absolute; bottom:20px; right:20px; width:120px; height:160px; border:2px solid #ff0055; border-radius:15px; z-index: 10; object-fit: cover; box-shadow: 0 0 15px rgba(255,0,85,0.5); }
+/* 2. ಲೋಕಲ್ ವೀಡಿಯೊ */
+#localVideo{ position:absolute; bottom:20px; right:20px; width:110px; height:150px; border:2px solid #ff0055; border-radius:12px; z-index: 10; object-fit: cover; }
 
-/* ಆಕ್ಷನ್ ಬಟನ್ ಗಳು */
+/* 3. ಆಕ್ಷನ್ ಬಟನ್ ಗಳು (ಯಾವುದನ್ನೂ ತೆಗೆದಿಲ್ಲ) */
 .controls{ position:absolute; bottom:30px; width:100%; display:flex; justify-content:center; gap:20px; z-index: 5; }
-.btn{ width:60px; height:60px; border-radius:50%; border:none; background:rgba(255,255,255,0.15); color:white; font-size:22px; cursor:pointer; backdrop-filter: blur(10px); transition: 0.3s; }
-.btn:active { transform: scale(0.9); background: #ff0055; }
+.btn{ width:55px; height:55px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); color:white; font-size:20px; cursor:pointer; }
 
-/* ಚಾಟ್ ಮತ್ತು ಬಾಟಮ್ ಸೆಕ್ಷನ್ */
-.bottom{ background:#111; padding:15px; display:flex; gap:10px; align-items: center; border-top: 1px solid #333; }
-.next{ background:#ff0055; border:none; padding:12px 25px; border-radius:30px; color:white; font-weight: bold; cursor:pointer; font-size: 16px; }
-input{ flex:1; padding:12px 20px; border:none; border-radius:30px; background:#222; color:white; outline: none; font-size: 16px; }
-.chatBox{ position:absolute; top:80px; right:20px; width:240px; max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.5); padding:10px; border-radius:15px; font-size:14px; pointer-events: none; z-index: 5; border: 1px solid rgba(255,255,255,0.1); }
-.online{ position:absolute; top:25px; left:20px; background:rgba(255, 0, 85, 0.9); padding:8px 18px; border-radius:30px; font-size:13px; font-weight:bold; z-index: 5; box-shadow: 0 0 10px #ff0055; }
+/* 4. ಬಾಟಮ್ ಸೆಕ್ಷನ್ ಮತ್ತು ನೆಕ್ಸ್ಟ್ ಬಟನ್ */
+.bottom{ background:#111; padding:12px; display:flex; gap:10px; align-items: center; border-top: 1px solid #222; }
+.next{ background:#ff0055; border:none; padding:12px 20px; border-radius:25px; color:white; font-weight: bold; cursor:pointer; }
+input{ flex:1; padding:12px; border:none; border-radius:25px; background:#222; color:white; outline: none; }
+.chatBox{ position:absolute; top:70px; right:15px; width:220px; max-height:180px; overflow-y:auto; background:rgba(0,0,0,0.5); padding:10px; border-radius:10px; font-size:13px; pointer-events: none; z-index: 5; }
+.online{ position:absolute; top:20px; left:15px; background:rgba(255, 0, 85, 0.8); padding:6px 15px; border-radius:20px; font-size:12px; font-weight:bold; z-index: 5; }
 </style>
 </head>
 
@@ -53,20 +52,20 @@ input{ flex:1; padding:12px 20px; border:none; border-radius:30px; background:#2
 
 <div class="main">
     <div class="video-section">
-        <div class="online">● LIVE: <span id="onlineCount">0</span></div>
+        <div class="online">Online: <span id="onlineCount">0</span></div>
         <div id="chatBox" class="chatBox"></div>
         <video id="remoteVideo" autoplay playsinline></video>
         <video id="localVideo" autoplay muted playsinline></video>
         <div class="controls">
-            <button class="btn" title="Mute" onclick="toggleAudio()">🎤</button>
-            <button class="btn" title="Camera" onclick="toggleVideo()">🎥</button>
-            <button class="btn" title="Flip" onclick="flipCamera()">🔄</button>
+            <button class="btn" onclick="toggleAudio()">🎤</button>
+            <button class="btn" onclick="toggleVideo()">🎥</button>
+            <button class="btn" onclick="flipCamera()">🔄</button>
         </div>
     </div>
     <div class="bottom">
         <button class="next" onclick="findStranger()">NEXT</button>
-        <input id="chatInput" placeholder="Say something...">
-        <button class="next" style="background:#444;" onclick="sendMsg()">SEND</button>
+        <input id="chatInput" placeholder="ಟೈಪ್ ಮಾಡಿ...">
+        <button class="next" style="background:#333;" onclick="sendMsg()">SEND</button>
     </div>
 </div>
 
@@ -77,24 +76,20 @@ const db=firebase.database();
 const lobby=db.ref("lobby");
 const online=db.ref("online");
 
-// ಲೋಗೋ ಸ್ಪೆಲ್ಲಿಂಗ್ ಅನಿಮೇಷನ್ ಲಾಜಿಕ್
+// ಎಂಟ್ರಿ ಅನಿಮೇಷನ್ (3.5 Seconds)
 const text = "SYKOLIVE";
 const container = document.getElementById("logoText");
 text.split("").forEach((char, i) => {
     const span = document.createElement("span");
     span.innerText = char;
     span.className = "letter";
-    span.style.animationDelay = `${i * 0.15}s`;
+    span.style.animationDelay = `${i * 0.1}s`;
     container.appendChild(span);
 });
 
-// 3 ಸೆಕೆಂಡ್ ನಂತರ ಆಟೋಮ್ಯಾಟಿಕ್ ಎಂಟ್ರಿ
 setTimeout(() => {
-    document.getElementById("entry").style.opacity = "0";
-    setTimeout(() => {
-        document.getElementById("entry").style.display = "none";
-        startApp();
-    }, 500);
+    document.getElementById("entry").style.display = "none";
+    startApp();
 }, 3500);
 
 online.on("value",snap=>{ document.getElementById("onlineCount").innerText=snap.numChildren() });
@@ -104,17 +99,23 @@ let peer, myId, myStream, currentCall, conn, facing="user";
 async function startApp(){
     await startCamera();
     peer = new Peer({ config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }] } });
+    
     peer.on("open",id=>{
         myId=id;
         online.child(id).set(true);
         online.child(id).onDisconnect().remove();
         findStranger();
     });
+
+    // ಈ ವಿಭಾಗವೇ ಆ ಕಡೆಯಿಂದ ವಿಡಿಯೋ ತೋರಿಸಲು ಕಾರಣ
     peer.on("call", call => { 
         currentCall = call; 
         call.answer(myStream); 
-        call.on("stream", s => { document.getElementById("remoteVideo").srcObject = s; });
+        call.on("stream", s => { 
+            document.getElementById("remoteVideo").srcObject = s; 
+        });
     });
+
     peer.on("connection", c => { conn = c; setupChat(); });
 }
 
@@ -151,12 +152,13 @@ function connectToStranger(id){
         conn = peer.connect(id);
         setupChat();
         currentCall = peer.call(id, myStream);
-        currentCall.on("stream", s => { document.getElementById("remoteVideo").srcObject = s; });
+        currentCall.on("stream", s => { 
+            document.getElementById("remoteVideo").srcObject = s; 
+        });
     }, 100); 
 }
 
 function setupChat(){ if(!conn) return; conn.on("data", msg => { addChat("Stranger: " + msg); }); }
-
 function sendMsg(){
     let input = document.getElementById("chatInput");
     if(!input.value || !conn) return;
@@ -164,16 +166,13 @@ function sendMsg(){
     conn.send(input.value);
     input.value = "";
 }
-
 function addChat(t){
     let chatBox = document.getElementById("chatBox");
     let div = document.createElement("div");
-    div.style.marginBottom = "8px";
     div.innerText = t;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
-
 function toggleAudio(){ myStream.getAudioTracks()[0].enabled = !myStream.getAudioTracks()[0].enabled; }
 function toggleVideo(){ myStream.getVideoTracks()[0].enabled = !myStream.getVideoTracks()[0].enabled; }
 
