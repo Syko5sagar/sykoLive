@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Syko Live Turbo</title>
+<title>Syko Live Turbo Fix</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -16,7 +16,7 @@ body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow-x
 .enterBtn{ margin-top:30px; padding:14px 40px; border:none; border-radius:40px; background:#ff0055; color:white; font-size:18px; cursor:pointer; box-shadow:0 0 20px #ff0055; }
 .main{ display:flex; flex-direction:column; height:100vh; }
 .video-section{ flex:1; position:relative; display:flex; background:#111; min-height: 0; }
-video{ width:100%; height:100%; object-fit:cover; }
+video{ width:100%; height:100%; object-fit:cover; background:#222; }
 #localVideo{ position:absolute; bottom:10px; right:10px; width:100px; height:130px; border:2px solid #00f2fe; border-radius:10px; z-index: 10; background:#000; }
 .controls{ position:absolute; bottom:20px; width:100%; display:flex; justify-content:center; gap:15px; z-index: 5; }
 .btn{ width:50px; height:50px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); color:white; font-size:18px; cursor:pointer; }
@@ -68,15 +68,13 @@ async function startApp(){
     document.getElementById("entry").style.display="none";
     await startCamera();
     
-    // ಸಾಗರ್, ಈ ಸರ್ವರ್‌ಗಳು ಕನೆಕ್ಷನ್ ಸ್ಪೀಡ್ ಅನ್ನು ಹೆಚ್ಚಿಸುತ್ತವೆ
     peer = new Peer({
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:iphone-ice.apple.com:3478' }
-            ],
-            'sdpSemantics': 'unified-plan'
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
         }
     });
     
@@ -87,14 +85,17 @@ async function startApp(){
         findStranger();
     });
 
-    peer.on("call",call=>{ 
-        currentCall=call; 
+    // ಇಲ್ಲಿ ಬದಲಾವಣೆ ಮಾಡಲಾಗಿದೆ: ಕಾಲ್ ಬಂದಾಗ ತಕ್ಷಣ ಆನ್ಸರ್ ಮಾಡಿ ಸ್ಟ್ರೀಮ್ ಸೆಟ್ ಮಾಡುತ್ತದೆ
+    peer.on("call", call => { 
+        currentCall = call; 
         call.answer(myStream); 
-        setupCall(call); 
+        call.on("stream", remoteStream => {
+            document.getElementById("remoteVideo").srcObject = remoteStream;
+        });
     });
 
-    peer.on("connection",c=>{ 
-        conn=c; 
+    peer.on("connection", c => { 
+        conn = c; 
         setupChat(); 
     });
 }
@@ -102,48 +103,37 @@ async function startApp(){
 async function startCamera(){
     try{
         myStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: facing,
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 },
-                frameRate: { ideal: 30 }
-            }, 
-            audio: { echoCancellation: true, noiseSuppression: true } 
+            video: { facingMode: facing, width: 640, height: 480 }, 
+            audio: true 
         });
         document.getElementById("localVideo").srcObject = myStream;
     } catch(e) { console.log("Camera error"); }
 }
 
-// ನೆಕ್ಸ್ಟ್ ಹೊಡೆದ ತಕ್ಷಣ ಫಾಸ್ಟ್ ಆಗಿ ಕನೆಕ್ಟ್ ಮಾಡುವ ಲಾಜಿಕ್
 function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
     document.getElementById("remoteVideo").srcObject = null;
     lobby.off(); 
 
-    // ಲಾಬಿಯಲ್ಲಿ ಖಾಲಿ ಇದ್ದವರನ್ನು ಹುಡುಕುವುದು
     lobby.once("value", snap => {
         let targetId = null;
         let targetKey = null;
-
         snap.forEach(child => {
             if(child.val() !== myId){
                 targetId = child.val();
                 targetKey = child.key;
-                return true; // ಫಸ್ಟ್ ಸಿಕ್ಕವರನ್ನೇ ಆರಿಸು (Speed)
+                return true; 
             }
         });
 
         if(targetId){
-            // ಸಿಕ್ಕ ತಕ್ಷಣ ಡೇಟಾಬೇಸ್‌ನಿಂದ ತೆಗೆದು ಕನೆಕ್ಟ್ ಮಾಡು
             lobby.child(targetKey).remove().then(() => {
                 connectToStranger(targetId);
             });
         } else {
-            // ಯಾರೂ ಇಲ್ಲದಿದ್ದರೆ ಲಾಬಿಯಲ್ಲಿ ವೇಯ್ಟ್ ಮಾಡು
             const myRef = lobby.push(myId);
             myRef.onDisconnect().remove();
-
             lobby.on("child_added", s => {
                 if(s.val() !== myId){
                     lobby.off();
@@ -155,19 +145,15 @@ function findStranger(){
 }
 
 function connectToStranger(id){
-    // ಕೇವಲ 200ms ಡಿಲೇ - ಅತಿ ವೇಗದ ಕನೆಕ್ಷನ್
+    // ಕನೆಕ್ಷನ್ ಸ್ಪೀಡ್ ಜಾಸ್ತಿ ಮಾಡಲು ಕೇವಲ 100ms ಡಿಲೇ
     setTimeout(() => {
-        currentCall = peer.call(id, myStream);
-        setupCall(currentCall);
         conn = peer.connect(id);
         setupChat();
-    }, 200); 
-}
-
-function setupCall(call){ 
-    call.on("stream", stream => { 
-        document.getElementById("remoteVideo").srcObject = stream; 
-    }); 
+        currentCall = peer.call(id, myStream);
+        currentCall.on("stream", remoteStream => {
+            document.getElementById("remoteVideo").srcObject = remoteStream;
+        });
+    }, 100; 
 }
 
 function setupChat(){ 
@@ -198,11 +184,6 @@ async function flipCamera(){
     facing = facing === "user" ? "environment" : "user"; 
     myStream.getTracks().forEach(track => track.stop());
     await startCamera();
-    if(currentCall && currentCall.peerConnection) {
-        const videoTrack = myStream.getVideoTracks()[0];
-        const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
-        if(sender) sender.replaceTrack(videoTrack);
-    }
 }
 </script>
 </body>
