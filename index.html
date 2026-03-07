@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Syko Live</title>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+
+<style>
+
+body{
+margin:0;
+background:#000;
+font-family:sans-serif;
+color:white;
+overflow:hidden;
+}
+
+/* ENTRY SCREEN */
+
+#entry{
+position:fixed;
+width:100%;
+height:100%;
+background:linear-gradient(120deg,#000,#111,#000);
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+z-index:999;
+}
+
+.entryTitle{
+font-size:40px;
+font-weight:bold;
+letter-spacing:3px;
+color:#ff0055;
+}
+
+.entrySub{
+margin-top:10px;
+color:#aaa;
+font-size:14px;
+}
+
+.enterBtn{
+margin-top:30px;
+padding:14px 40px;
+border:none;
+border-radius:40px;
+background:#ff0055;
+color:white;
+font-size:18px;
+cursor:pointer;
+box-shadow:0 0 20px #ff0055;
+}
+
+/* APP */
+
+.main{
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+.video-section{
+flex:1;
+position:relative;
+display:flex;
+background:#111;
+}
+
+video{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+#localVideo{
+position:absolute;
+bottom:20px;
+right:20px;
+width:150px;
+height:200px;
+border:2px solid #00f2fe;
+border-radius:10px;
+}
+
+.controls{
+position:absolute;
+bottom:100px;
+width:100%;
+display:flex;
+justify-content:center;
+gap:20px;
+}
+
+.btn{
+width:60px;
+height:60px;
+border-radius:50%;
+border:none;
+background:rgba(255,255,255,0.2);
+color:white;
+font-size:20px;
+cursor:pointer;
+}
+
+.bottom{
+background:#111;
+padding:10px;
+display:flex;
+gap:10px;
+}
+
+.next{
+background:#ff0055;
+border:none;
+padding:10px 20px;
+border-radius:20px;
+color:white;
+}
+
+input{
+flex:1;
+padding:10px;
+border:none;
+border-radius:20px;
+background:#222;
+color:white;
+}
+
+.chatBox{
+position:absolute;
+top:20px;
+right:20px;
+width:220px;
+max-height:200px;
+overflow:auto;
+background:rgba(0,0,0,0.6);
+padding:10px;
+border-radius:10px;
+font-size:12px;
+}
+
+.online{
+position:absolute;
+top:20px;
+left:20px;
+background:black;
+padding:6px 14px;
+border-radius:20px;
+font-size:12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- ENTRY -->
+
+<div id="entry">
+
+<div class="entryTitle">
+SYKO LIVE
+</div>
+
+<div class="entrySub">
+Random Video Chat
+</div>
+
+<button class="enterBtn" onclick="startApp()">
+ENTER
+</button>
+
+</div>
+
+
+<div class="main">
+
+<div class="video-section">
+
+<div class="online">
+Online: <span id="onlineCount">0</span>
+</div>
+
+<div class="chatBox" id="chatBox"></div>
+
+<video id="remoteVideo" autoplay playsinline></video>
+<video id="localVideo" autoplay muted playsinline></video>
+
+<div class="controls">
+
+<button class="btn" onclick="toggleAudio()">🎤</button>
+<button class="btn" onclick="toggleVideo()">🎥</button>
+<button class="btn" onclick="flipCamera()">🔄</button>
+
+</div>
+
+</div>
+
+<div class="bottom">
+
+<button class="next" onclick="findStranger()">NEXT</button>
+
+<input id="chatInput" placeholder="Type message">
+
+<button onclick="sendMsg()">SEND</button>
+
+</div>
+
+</div>
+
+<script>
+
+/* FIREBASE */
+
+const firebaseConfig={
+databaseURL:"https://sykolive-846a3-default-rtdb.firebaseio.com/"
+}
+
+firebase.initializeApp(firebaseConfig)
+
+const db=firebase.database()
+
+const lobby=db.ref("lobby")
+const online=db.ref("online")
+
+online.on("value",snap=>{
+onlineCount.innerText=snap.numChildren()
+})
+
+
+/* VARIABLES */
+
+let peer
+let myId
+let myStream
+let currentCall
+let conn
+
+let facing="user"
+
+
+async function startApp(){
+
+entry.style.display="none"
+
+await startCamera()
+
+peer=new Peer({
+
+config:{
+'iceServers':[
+{urls:'stun:stun.l.google.com:19302'},
+{urls:'stun:stun1.l.google.com:19302'}
+]
+}
+
+})
+
+peer.on("open",id=>{
+
+myId=id
+
+online.child(id).set(true)
+online.child(id).onDisconnect().remove()
+
+})
+
+peer.on("call",call=>{
+
+currentCall=call
+
+call.answer(myStream)
+
+setupCall(call)
+
+})
+
+peer.on("connection",c=>{
+
+conn=c
+
+setupChat()
+
+})
+
+}
+
+
+/* CAMERA */
+
+async function startCamera(){
+
+try{
+
+myStream=await navigator.mediaDevices.getUserMedia({
+
+video:true,
+audio:true
+
+})
+
+localVideo.srcObject=myStream
+
+}catch(e){
+
+alert("Camera permission required")
+
+}
+
+}
+
+
+/* CONNECT */
+
+function findStranger(){
+
+if(currentCall)currentCall.close()
+
+remoteVideo.srcObject=null
+
+lobby.once("value",snap=>{
+
+let found=false
+
+snap.forEach(child=>{
+
+if(!found && child.val()!=myId){
+
+found=true
+
+connect(child.val())
+
+lobby.child(child.key).remove()
+
+}
+
+})
+
+if(!found){
+
+lobby.push(myId)
+
+}
+
+})
+
+}
+
+
+function connect(id){
+
+currentCall=peer.call(id,myStream)
+
+conn=peer.connect(id)
+
+setupCall(currentCall)
+setupChat()
+
+}
+
+
+function setupCall(call){
+
+call.on("stream",stream=>{
+
+remoteVideo.srcObject=stream
+
+})
+
+}
+
+
+/* CHAT */
+
+function setupChat(){
+
+conn.on("data",msg=>{
+
+addChat("Stranger: "+msg)
+
+})
+
+}
+
+
+function sendMsg(){
+
+let msg=chatInput.value
+
+if(!msg || !conn)return
+
+addChat("You: "+msg)
+
+conn.send(msg)
+
+chatInput.value=""
+
+}
+
+
+function addChat(t){
+
+let div=document.createElement("div")
+
+div.innerText=t
+
+chatBox.appendChild(div)
+
+chatBox.scrollTop=chatBox.scrollHeight
+
+}
+
+
+/* CONTROLS */
+
+function toggleAudio(){
+
+let t=myStream.getAudioTracks()[0]
+
+t.enabled=!t.enabled
+
+}
+
+function toggleVideo(){
+
+let t=myStream.getVideoTracks()[0]
+
+t.enabled=!t.enabled
+
+}
+
+async function flipCamera(){
+
+facing=facing==="user"?"environment":"user"
+
+await startCamera()
+
+}
+
+</script>
+
+</body>
+</html>
