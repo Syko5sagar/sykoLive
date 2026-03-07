@@ -15,7 +15,6 @@ margin:0;
 background:#000;
 font-family:sans-serif;
 color:white;
-/* ಮೊಬೈಲ್‌ನಲ್ಲಿ ಸ್ಕ್ರೋಲ್ ಮಾಡಲು ಅನುಕೂಲವಾಗುವಂತೆ ಬದಲಾಯಿಸಲಾಗಿದೆ */
 overflow-x:hidden; 
 height: 100vh;
 }
@@ -62,7 +61,7 @@ box-shadow:0 0 20px #ff0055;
 .main{
 display:flex;
 flex-direction:column;
-height:100vh; /* ಇಡೀ ಸ್ಕ್ರೀನ್ ಎತ್ತರಕ್ಕೆ ತಕ್ಕಂತೆ */
+height:100vh;
 }
 
 .video-section{
@@ -70,7 +69,7 @@ flex:1;
 position:relative;
 display:flex;
 background:#111;
-min-height: 0; /* ಫೋನ್‌ನಲ್ಲಿ ಕಂಟ್ರೋಲ್‌ಗಳು ಕಾಣಲು ಇದು ಮುಖ್ಯ */
+min-height: 0;
 }
 
 video{
@@ -83,11 +82,12 @@ object-fit:cover;
 position:absolute;
 bottom:10px;
 right:10px;
-width:100px; /* ಮೊಬೈಲ್‌ನಲ್ಲಿ ಚಿಕ್ಕದಾಗಿ ಕಾಣಲು */
+width:100px;
 height:130px;
 border:2px solid #00f2fe;
 border-radius:10px;
 z-index: 10;
+background: #000;
 }
 
 .controls{
@@ -154,7 +154,7 @@ padding:8px;
 border-radius:10px;
 font-size:11px;
 z-index: 5;
-pointer-events: none; /* ವೀಡಿಯೊ ಮೇಲೆ ಅಡ್ಡಿಯಾಗದಂತೆ */
+pointer-events: none;
 }
 
 .online{
@@ -168,7 +168,6 @@ font-size:11px;
 z-index: 5;
 }
 
-/* TABLET & DESKTOP ಸೈಜ್‌ಗಾಗಿ ಹೆಚ್ಚುವರಿ ಸೆಟ್ಟಿಂಗ್ */
 @media (min-width: 768px) {
     #localVideo { width: 150px; height: 200px; }
     .chatBox { width: 220px; max-height: 200px; }
@@ -204,85 +203,148 @@ z-index: 5;
 </div>
 
 <script>
-/* ಸಾಗರ್, ಕೆಳಗಿನ ಸ್ಕ್ರಿಪ್ಟ್ ಲಾಜಿಕ್ ಅಪ್ಲಿಕೇಶನ್ ರನ್ ಮಾಡಲು ಹಾಗೆಯೇ ಇರಿಸಲಾಗಿದೆ */
+/* ಸುಧಾರಿತ ಲಾಜಿಕ್ - ಸಾಗರ್ ಗಾಗಿ */
 const firebaseConfig={
-databaseURL:"https://sykolive-846a3-default-rtdb.firebaseio.com/"
+    databaseURL:"https://sykolive-846a3-default-rtdb.firebaseio.com/"
 }
 firebase.initializeApp(firebaseConfig)
 const db=firebase.database()
 const lobby=db.ref("lobby")
 const online=db.ref("online")
+
+// ಆನ್‌ಲೈನ್ ಕೌಂಟ್ ಅಪ್‌ಡೇಟ್
 online.on("value",snap=>{ onlineCount.innerText=snap.numChildren() })
 
 let peer, myId, myStream, currentCall, conn, facing="user";
 
 async function startApp(){
-    entry.style.display="none"
+    document.getElementById("entry").style.display="none"
     await startCamera()
+    
+    // PeerJS ಸೆಟಪ್
     peer=new Peer({
         config:{ 'iceServers':[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}] }
     })
+    
     peer.on("open",id=>{
         myId=id
         online.child(id).set(true)
         online.child(id).onDisconnect().remove()
     })
-    peer.on("call",call=>{ currentCall=call; call.answer(myStream); setupCall(call); })
-    peer.on("connection",c=>{ conn=c; setupChat(); })
+
+    // ಯಾರಾದರೂ ನಮಗೆ ಕಾಲ್ ಮಾಡಿದಾಗ
+    peer.on("call",call=>{ 
+        currentCall=call; 
+        call.answer(myStream); 
+        setupCall(call); 
+    })
+
+    // ಚಾಟ್ ಕನೆಕ್ಷನ್ ಬಂದಾಗ
+    peer.on("connection",c=>{ 
+        conn=c; 
+        setupChat(); 
+    })
 }
 
 async function startCamera(){
     try{
         myStream=await navigator.mediaDevices.getUserMedia({ video:true, audio:true })
-        localVideo.srcObject=myStream
+        document.getElementById("localVideo").srcObject=myStream
     }catch(e){ alert("Camera permission required") }
 }
 
 function findStranger(){
-    if(currentCall)currentCall.close()
-    remoteVideo.srcObject=null
-    lobby.once("value",snap=>{
-        let found=false
-        snap.forEach(child=>{
-            if(!found && child.val()!=myId){
-                found=true
-                connect(child.val())
-                lobby.child(child.key).remove()
+    // ಹಳೆಯ ಕನೆಕ್ಷನ್‌ಗಳನ್ನು ಕ್ಲೋಸ್ ಮಾಡುವುದು
+    if(currentCall) currentCall.close()
+    if(conn) conn.close()
+    document.getElementById("remoteVideo").srcObject=null
+    
+    // ಲಾಬಿಯಲ್ಲಿ ಯಾರಿದ್ದಾರೆ ಎಂದು ಚೆಕ್ ಮಾಡುವುದು
+    lobby.once("value", snap => {
+        let strangerId = null;
+        let found = false;
+        
+        snap.forEach(child => {
+            if(!found && child.val() !== myId){
+                strangerId = child.val();
+                found = true;
+                lobby.child(child.key).remove(); // ಸಿಕ್ಕಿದ ತಕ್ಷಣ ಲಾಬಿಯಿಂದ ತೆಗೆಯುವುದು
             }
-        })
-        if(!found){ lobby.push(myId) }
-    })
+        });
+
+        if(found && strangerId){
+            connectToStranger(strangerId);
+        } else {
+            // ಯಾರೂ ಇಲ್ಲದಿದ್ದರೆ ಲಾಬಿಯಲ್ಲಿ ವೇಯ್ಟ್ ಮಾಡುವುದು
+            const myWait = lobby.push(myId);
+            myWait.onDisconnect().remove();
+        }
+    });
 }
 
-function connect(id){
-    currentCall=peer.call(id,myStream)
-    conn=peer.connect(id)
-    setupCall(currentCall)
-    setupChat()
+function connectToStranger(id){
+    // ವಿಡಿಯೋ ಕಾಲ್ ಮಾಡುವುದು
+    currentCall = peer.call(id, myStream);
+    setupCall(currentCall);
+    
+    // ಚಾಟ್ ಕನೆಕ್ಷನ್ ಮಾಡುವುದು
+    conn = peer.connect(id);
+    setupChat();
 }
 
-function setupCall(call){ call.on("stream",stream=>{ remoteVideo.srcObject=stream }) }
+function setupCall(call){ 
+    call.on("stream", stream => { 
+        document.getElementById("remoteVideo").srcObject = stream; 
+    }); 
+}
 
-function setupChat(){ conn.on("data",msg=>{ addChat("Stranger: "+msg) }) }
+function setupChat(){ 
+    if(!conn) return;
+    conn.on("data", msg => { 
+        addChat("Stranger: " + msg); 
+    });
+    conn.on("close", () => { addChat("Stranger disconnected."); });
+}
 
 function sendMsg(){
-    let msg=chatInput.value
-    if(!msg || !conn)return
-    addChat("You: "+msg)
-    conn.send(msg)
-    chatInput.value=""
+    let input = document.getElementById("chatInput");
+    let msg = input.value;
+    if(!msg || !conn) return;
+    addChat("You: " + msg);
+    conn.send(msg);
+    input.value = "";
 }
 
 function addChat(t){
-    let div=document.createElement("div")
-    div.innerText=t
-    chatBox.appendChild(div)
-    chatBox.scrollTop=chatBox.scrollHeight
+    let chatBox = document.getElementById("chatBox");
+    let div = document.createElement("div");
+    div.innerText = t;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function toggleAudio(){ let t=myStream.getAudioTracks()[0]; t.enabled=!t.enabled }
-function toggleVideo(){ let t=myStream.getVideoTracks()[0]; t.enabled=!t.enabled }
-async function flipCamera(){ facing=facing==="user"?"environment":"user"; await startCamera() }
+function toggleAudio(){ 
+    let t=myStream.getAudioTracks()[0]; 
+    t.enabled=!t.enabled; 
+}
+
+function toggleVideo(){ 
+    let t=myStream.getVideoTracks()[0]; 
+    t.enabled=!t.enabled; 
+}
+
+async function flipCamera(){ 
+    facing = facing === "user" ? "environment" : "user"; 
+    myStream.getTracks().forEach(track => track.stop());
+    await startCamera();
+    
+    // ಕಾಲ್ ನಡೆಯುತ್ತಿದ್ದರೆ ಹೊಸ ವಿಡಿಯೋ ಟ್ರ್ಯಾಕ್ ಅಪ್‌ಡೇಟ್ ಮಾಡುವುದು
+    if(currentCall && currentCall.peerConnection) {
+        let videoTrack = myStream.getVideoTracks()[0];
+        let sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
+        if(sender) sender.replaceTrack(videoTrack);
+    }
+}
 </script>
 </body>
 </html>
