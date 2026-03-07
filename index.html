@@ -3,17 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Syko Live Pro V3 - Fixed</title>
+<title>Syko Live Pro V3 - Optimized</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-/* ಮೂಲ ವಿನ್ಯಾಸ */
 body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100dvh; width: 100%; position: fixed; }
 
-/* ಎಂಟ್ರಿ ಅನಿಮೇಷನ್ */
 #entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:1000; }
 .letter { font-size: 40px; font-weight: bold; color: #ff0055; text-shadow: 0 0 15px #ff0055; opacity: 0; animation: bounceIn 0.5s forwards; }
 @keyframes bounceIn { to { opacity: 1; transform: scale(1); } }
@@ -85,7 +83,7 @@ input { flex: 1; background: #222; border: none; padding: 10px 15px; border-radi
 </div>
 
 <script>
-// --- Firebase Config ---
+// --- Firebase Config (ನಿನ್ನ ಹಳೆಯ ಕೀಗಳನ್ನು ಇಲ್ಲಿ ಹಾಕು) ---
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY", 
   authDomain: "sykolive-846a3.firebaseapp.com",
@@ -101,7 +99,6 @@ const db = firebase.database();
 const lobby = db.ref("lobby");
 const online = db.ref("online");
 
-// ಎಂಟ್ರಿ ಅನಿಮೇಷನ್
 const logoContainer = document.getElementById("logoText");
 "SYKOLIVE".split("").forEach((c, i) => {
     const span = document.createElement("span");
@@ -133,14 +130,12 @@ function setupPeer() {
     });
 
     peer.on("call", call => {
-        if (isConnected) return;
+        if (isConnected) return; // ಬ್ಯುಸಿ ಇದ್ದರೆ ಹೊಸ ಕಾಲ್ ಬೇಡ
         currentCall = call;
         call.answer(myStream);
         call.on("stream", s => { 
             document.getElementById("remoteVideo").srcObject = s;
-            isConnected = true;
-            document.getElementById("status").innerText = "Connected!";
-            lobby.child(myId).remove();
+            markAsConnected();
         });
         call.on("close", () => { isConnected = false; findStranger(); });
     });
@@ -153,6 +148,12 @@ function setupPeer() {
     online.on("value", s => { document.getElementById("onlineCount").innerText = s.numChildren(); });
 }
 
+function markAsConnected() {
+    isConnected = true;
+    document.getElementById("status").innerText = "Connected!";
+    lobby.child(myId).remove(); // ಕನೆಕ್ಟ್ ಆದ ತಕ್ಷಣ ಲಾಬಿಯಿಂದ ಐಡಿ ಔಟ್
+}
+
 function findStranger() {
     isConnected = false;
     lobby.off(); 
@@ -160,23 +161,25 @@ function findStranger() {
     if(conn) conn.close();
     
     document.getElementById("remoteVideo").srcObject = null;
-    document.getElementById("status").innerText = "Matching...";
+    document.getElementById("status").innerText = "Searching for someone free...";
     document.getElementById("chatBox").innerHTML = "";
 
     lobby.once("value", snap => {
-        let allUsers = [];
+        let waitingUsers = [];
         snap.forEach(child => {
-            if(child.val() !== myId) allUsers.push(child.val());
+            if(child.val() !== myId) waitingUsers.push(child.val());
         });
 
-        if(allUsers.length > 0) {
-            let randomUser = allUsers[Math.floor(Math.random() * allUsers.length)];
+        if(waitingUsers.length > 0) {
+            let randomUser = waitingUsers[Math.floor(Math.random() * waitingUsers.length)];
+            // ಕನೆಕ್ಟ್ ಮಾಡುವ ಮುನ್ನ ಆ ವ್ಯಕ್ತಿಯನ್ನು ಲಾಬಿಯಿಂದ ತೆಗೆಯಿರಿ ಇದರಿಂದ ಬೇರೆಯವರು ಅವರಿಗೆ ತೊಂದರೆ ಕೊಡಲ್ಲ
             lobby.child(randomUser).remove(); 
             connectTo(randomUser);
         } else {
+            // ಯಾರು ಇಲ್ಲದಿದ್ದರೆ ನೀವು ವೇಯ್ಟಿಂಗ್ ಲಿಸ್ಟ್ ಗೆ ಸೇರಿ
             lobby.child(myId).set(myId);
             lobby.child(myId).onDisconnect().remove();
-            document.getElementById("status").innerText = "Waiting...";
+            document.getElementById("status").innerText = "Waiting for someone...";
             
             lobby.on("child_added", s => {
                 if(s.val() !== myId && !isConnected) {
@@ -197,9 +200,7 @@ function connectTo(id) {
     currentCall = peer.call(id, myStream);
     currentCall.on("stream", s => { 
         document.getElementById("remoteVideo").srcObject = s;
-        isConnected = true;
-        document.getElementById("status").innerText = "Connected!";
-        lobby.child(myId).remove(); 
+        markAsConnected();
     });
 }
 
