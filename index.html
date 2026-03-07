@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Syko Live Turbo Fix</title>
+<title>Syko Live Ultra Fast</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow-x:hidden; height: 100vh; }
-#entry{ position:fixed; width:100%; height:100%; background:linear-gradient(120deg,#000,#111,#000); display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:999; }
-.entryTitle{ font-size:40px; font-weight:bold; letter-spacing:3px; color:#ff0055; }
-.enterBtn{ margin-top:30px; padding:14px 40px; border:none; border-radius:40px; background:#ff0055; color:white; font-size:18px; cursor:pointer; box-shadow:0 0 20px #ff0055; }
+body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100vh; }
+#entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:999; }
+.entryTitle{ font-size:40px; font-weight:bold; color:#ff0055; }
+.enterBtn{ margin-top:30px; padding:14px 40px; border:none; border-radius:40px; background:#ff0055; color:white; font-size:18px; cursor:pointer; }
 .main{ display:flex; flex-direction:column; height:100vh; }
-.video-section{ flex:1; position:relative; display:flex; background:#111; min-height: 0; }
-video{ width:100%; height:100%; object-fit:cover; background:#222; }
-#localVideo{ position:absolute; bottom:10px; right:10px; width:100px; height:130px; border:2px solid #00f2fe; border-radius:10px; z-index: 10; background:#000; }
+.video-section{ flex:1; position:relative; display:flex; background:#111; }
+video{ width:100%; height:100%; object-fit:cover; background:#000; }
+#localVideo{ position:absolute; bottom:10px; right:10px; width:100px; height:130px; border:2px solid #ff0055; border-radius:10px; z-index: 10; }
 .controls{ position:absolute; bottom:20px; width:100%; display:flex; justify-content:center; gap:15px; z-index: 5; }
-.btn{ width:50px; height:50px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); color:white; font-size:18px; cursor:pointer; }
-.bottom{ background:#111; padding:10px; display:flex; gap:10px; align-items: center; border-top: 1px solid #222; }
-.next{ background:#ff0055; border:none; padding:12px 20px; border-radius:20px; color:white; font-weight: bold; cursor: pointer; }
+.btn{ width:50px; height:50px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); color:white; font-size:18px; }
+.bottom{ background:#111; padding:10px; display:flex; gap:10px; align-items: center; }
+.next{ background:#ff0055; border:none; padding:12px 20px; border-radius:20px; color:white; font-weight: bold; }
 input{ flex:1; padding:12px; border:none; border-radius:20px; background:#222; color:white; outline: none; }
-.chatBox{ position:absolute; top:60px; right:10px; width:220px; max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.5); padding:8px; border-radius:10px; font-size:13px; z-index: 5; pointer-events: none; }
-.online{ position:absolute; top:20px; left:10px; background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:20px; font-size:11px; z-index: 5; }
+.chatBox{ position:absolute; top:60px; right:10px; width:200px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.5); padding:8px; border-radius:10px; font-size:12px; pointer-events: none; }
+.online{ position:absolute; top:20px; left:10px; background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:20px; font-size:11px; }
 </style>
 </head>
 
@@ -69,13 +69,7 @@ async function startApp(){
     await startCamera();
     
     peer = new Peer({
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ]
-        }
+        config: {'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }]}
     });
     
     peer.on("open",id=>{
@@ -85,29 +79,24 @@ async function startApp(){
         findStranger();
     });
 
-    // ಇಲ್ಲಿ ಬದಲಾವಣೆ ಮಾಡಲಾಗಿದೆ: ಕಾಲ್ ಬಂದಾಗ ತಕ್ಷಣ ಆನ್ಸರ್ ಮಾಡಿ ಸ್ಟ್ರೀಮ್ ಸೆಟ್ ಮಾಡುತ್ತದೆ
     peer.on("call", call => { 
         currentCall = call; 
         call.answer(myStream); 
-        call.on("stream", remoteStream => {
-            document.getElementById("remoteVideo").srcObject = remoteStream;
-        });
+        call.on("stream", s => { document.getElementById("remoteVideo").srcObject = s; });
     });
 
-    peer.on("connection", c => { 
-        conn = c; 
-        setupChat(); 
-    });
+    peer.on("connection", c => { conn = c; setupChat(); });
 }
 
+// ಸಾಗರ್, ಇಲ್ಲಿ ಸ್ಪೀಡ್‌ಗಾಗಿ ರೆಸಲ್ಯೂಶನ್ ಆಪ್ಟಿಮೈಸ್ ಮಾಡಲಾಗಿದೆ
 async function startCamera(){
     try{
         myStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: facing, width: 640, height: 480 }, 
+            video: { facingMode: facing, width: {ideal: 400}, height: {ideal: 300}, frameRate: 20 }, 
             audio: true 
         });
         document.getElementById("localVideo").srcObject = myStream;
-    } catch(e) { console.log("Camera error"); }
+    } catch(e) { alert("Camera error"); }
 }
 
 function findStranger(){
@@ -128,32 +117,25 @@ function findStranger(){
         });
 
         if(targetId){
-            lobby.child(targetKey).remove().then(() => {
-                connectToStranger(targetId);
-            });
+            lobby.child(targetKey).remove().then(() => connectToStranger(targetId));
         } else {
             const myRef = lobby.push(myId);
             myRef.onDisconnect().remove();
             lobby.on("child_added", s => {
-                if(s.val() !== myId){
-                    lobby.off();
-                    findStranger();
-                }
+                if(s.val() !== myId){ lobby.off(); findStranger(); }
             });
         }
     });
 }
 
 function connectToStranger(id){
-    // ಕನೆಕ್ಷನ್ ಸ್ಪೀಡ್ ಜಾಸ್ತಿ ಮಾಡಲು ಕೇವಲ 100ms ಡಿಲೇ
+    // ಕೇವಲ 50ms - ಮಿಂಚಿನ ವೇಗ
     setTimeout(() => {
         conn = peer.connect(id);
         setupChat();
         currentCall = peer.call(id, myStream);
-        currentCall.on("stream", remoteStream => {
-            document.getElementById("remoteVideo").srcObject = remoteStream;
-        });
-    }, 100; 
+        currentCall.on("stream", s => { document.getElementById("remoteVideo").srcObject = s; });
+    }, 50); 
 }
 
 function setupChat(){ 
@@ -177,8 +159,8 @@ function addChat(t){
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function toggleAudio(){ let t=myStream.getAudioTracks()[0]; t.enabled=!t.enabled; }
-function toggleVideo(){ let t=myStream.getVideoTracks()[0]; t.enabled=!t.enabled; }
+function toggleAudio(){ myStream.getAudioTracks()[0].enabled = !myStream.getAudioTracks()[0].enabled; }
+function toggleVideo(){ myStream.getVideoTracks()[0].enabled = !myStream.getVideoTracks()[0].enabled; }
 
 async function flipCamera(){ 
     facing = facing === "user" ? "environment" : "user"; 
