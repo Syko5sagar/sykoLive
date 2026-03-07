@@ -2,7 +2,7 @@
 <html lang="kn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Syko Live Pro V3</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -10,45 +10,84 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-/* ಮೂಲ ವಿನ್ಯಾಸ */
-body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100%; width: 100%; }
+/* ಮೂಲ ವಿನ್ಯಾಸ - 100dvh ಬಳಸಲಾಗಿದೆ ಇದರಿಂದ ಮೊಬೈಲ್ ನಲ್ಲಿ ಕಟ್ ಆಗಲ್ಲ */
+body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100dvh; width: 100%; position: fixed; }
 
 /* ಎಂಟ್ರಿ ಅನಿಮೇಷನ್ */
 #entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:1000; }
 .letter { font-size: 40px; font-weight: bold; color: #ff0055; text-shadow: 0 0 15px #ff0055; opacity: 0; animation: bounceIn 0.5s forwards; }
 @keyframes bounceIn { to { opacity: 1; transform: scale(1); } }
 
-/* ಮೇನ್ ಕಂಟೇನರ್ - Desktop & Mobile ಹೊಂದಾಣಿಕೆ */
-.main-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100vw; max-width: 1200px; margin: 0 auto; position: relative; }
+/* ಮೇನ್ ಕಂಟೇನರ್ */
+.main-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100vw; position: relative; }
 
 /* ವಿಡಿಯೋ ಸೆಕ್ಷನ್ */
 .video-grid { flex: 1; position: relative; display: flex; background: #111; overflow: hidden; justify-content: center; align-items: center; }
 #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
-#localVideo { position: absolute; bottom: 10px; right: 10px; width: 120px; height: 160px; border: 2px solid #55eefc; border-radius: 12px; z-index: 10; object-fit: cover; background: #222; }
 
-/* ಕಂಟ್ರೋಲ್ ಬಟನ್ ಗಳು (ಮೈಕ್, ಕ್ಯಾಮೆರಾ) */
-.side-controls { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 20; }
-.control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: rgba(255, 255, 255, 0.15); color: white; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px); transition: 0.3s; }
+/* ಲೋಕಲ್ ವಿಡಿಯೋ - ಮೊಬೈಲ್ ನಲ್ಲಿ ಸ್ವಲ್ಪ ಮೇಲೆ ಜರಿಸಲಾಗಿದೆ */
+#localVideo { 
+    position: absolute; 
+    bottom: 20px; 
+    right: 15px; 
+    width: 100px; 
+    height: 140px; 
+    border: 2px solid #55eefc; 
+    border-radius: 12px; 
+    z-index: 10; 
+    object-fit: cover; 
+    background: #222; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* ಕಂಟ್ರೋಲ್ ಬಟನ್ ಗಳು */
+.side-controls { position: absolute; left: 15px; top: 40%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 20; }
+.control-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: rgba(255, 255, 255, 0.15); color: white; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; }
 .control-btn.off { background: rgba(255, 0, 0, 0.6); }
 
-/* ಚಾಟ್ ಬಾಕ್ಸ್ */
-#chatBox { position: absolute; bottom: 80px; left: 15px; width: 280px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; font-size: 14px; z-index: 5; pointer-events: none; }
+/* ಚಾಟ್ ಬಾಕ್ಸ್ - ಮೊಬೈಲ್ ನಲ್ಲಿ ಇನ್‌ಪುಟ್ ಬಾರ್‌ನ ಮೇಲ್ಭಾಗಕ್ಕೆ ಹೊಂದಿಸಲಾಗಿದೆ */
+#chatBox { 
+    position: absolute; 
+    bottom: 10px; 
+    left: 15px; 
+    width: 65%; 
+    max-height: 120px; 
+    overflow-y: auto; 
+    background: rgba(0,0,0,0.3); 
+    padding: 8px; 
+    border-radius: 10px; 
+    font-size: 13px; 
+    z-index: 5; 
+    pointer-events: none; 
+    scroll-behavior: smooth;
+}
 .msg-tag { font-weight: bold; color: #55eefc; }
 
-/* ಕೆಳಗಿನ ಪಟ್ಟಿ (Input & Next) */
-.action-bar { height: 70px; background: #000; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 15px; gap: 10px; z-index: 30; }
-.next-btn { background: #ff0055; border: none; padding: 12px 25px; border-radius: 30px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-.next-btn:active { transform: scale(0.9); }
-input { flex: 1; background: #222; border: none; padding: 12px 20px; border-radius: 30px; color: white; outline: none; }
-.send-btn { background: #333; border: none; padding: 10px 20px; border-radius: 30px; color: white; cursor: pointer; }
+/* ಕೆಳಗಿನ ಪಟ್ಟಿ (Input & Next) - ಮೊಬೈಲ್ ಬ್ರೌಸರ್ ಹ್ಯಾಂಡಲ್ ಗೆ ಜಾಗ ಬಿಡಲಾಗಿದೆ */
+.action-bar { 
+    height: 70px; 
+    background: #000; 
+    border-top: 1px solid #222; 
+    display: flex; 
+    align-items: center; 
+    padding: 0 10px; 
+    gap: 8px; 
+    z-index: 30;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.next-btn { background: #ff0055; border: none; padding: 10px 18px; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
+input { flex: 1; background: #222; border: none; padding: 10px 15px; border-radius: 20px; color: white; outline: none; font-size: 14px; }
+.send-btn { background: #333; border: none; padding: 10px 15px; border-radius: 20px; color: white; cursor: pointer; font-size: 13px; }
 
-/* ಸ್ಟೇಟಸ್ ಮತ್ತು ಆನ್‌ಲೈನ್ ಕೌಂಟ್ */
-.info-tag { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; font-size: 12px; z-index: 100; border: 1px solid #ff0055; }
+/* ಸ್ಟೇಟಸ್ ಟ್ಯಾಗ್ */
+.info-tag { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 20px; font-size: 11px; z-index: 100; border: 1px solid rgba(255,0,85,0.5); }
 
-/* ಕಂಪ್ಯೂಟರ್ ಗಾಗಿ ವಿಶೇಷ ವಿನ್ಯಾಸ */
+/* ಕಂಪ್ಯೂಟರ್ ಗಾಗಿ ವಿನ್ಯಾಸ (Desktop) */
 @media (min-width: 768px) {
-    #localVideo { width: 200px; height: 150px; bottom: 20px; right: 20px; }
-    #chatBox { width: 400px; }
+    #localVideo { width: 180px; height: 135px; bottom: 25px; right: 25px; }
+    #chatBox { width: 350px; bottom: 20px; }
+    .side-controls { left: 25px; }
+    .action-bar { padding: 0 25px; gap: 15px; }
 }
 </style>
 </head>
@@ -80,7 +119,7 @@ input { flex: 1; background: #222; border: none; padding: 12px 20px; border-radi
 </div>
 
 <script>
-// --- ಇಲ್ಲಿ ನಿನ್ನ Firebase Config ಹಾಕು ---
+// --- ನಿನ್ನ Firebase Config ಇಲ್ಲಿ ಹಾಕು ---
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY", 
   authDomain: "sykolive-846a3.firebaseapp.com",
@@ -110,14 +149,14 @@ let peer, myId, myStream, currentCall, conn, facing="user";
 
 async function startApp() {
     try {
-        myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        myStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
         document.getElementById("localVideo").srcObject = myStream;
         setupPeer();
     } catch(e) { alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ!"); }
 }
 
 function setupPeer() {
-    peer = new Peer({ config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }] } });
+    peer = new Peer({ config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] } });
     
     peer.on("open", id => {
         myId = id;
@@ -188,7 +227,6 @@ function addChat(user, msg) {
     box.scrollTop = box.scrollHeight;
 }
 
-// ಬಟನ್ ಫಂಕ್ಷನ್ ಗಳು
 function toggleAudio() {
     const audio = myStream.getAudioTracks()[0];
     audio.enabled = !audio.enabled;
@@ -206,7 +244,11 @@ async function flipCamera() {
     myStream.getTracks().forEach(t => t.stop());
     myStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
     document.getElementById("localVideo").srcObject = myStream;
-    if(currentCall) peer.call(currentCall.peer, myStream);
+    if(currentCall) {
+        const videoTrack = myStream.getVideoTracks()[0];
+        const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
+        if(sender) sender.replaceTrack(videoTrack);
+    }
 }
 
 document.getElementById("chatInput").onkeypress = (e) => { if(e.key === "Enter") sendMsg(); };
