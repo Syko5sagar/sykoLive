@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Syko Live</title>
+<title>Syko Live HD</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -98,45 +98,55 @@ async function startApp(){
     });
 }
 
+// HD ಕ್ಲಾರಿಟಿಗಾಗಿ ಇಲ್ಲಿ ಬದಲಾವಣೆ ಮಾಡಲಾಗಿದೆ
 async function startCamera(){
     try{
-        myStream=await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: facing }, audio:true 
+        myStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: facing,
+                width: { min: 640, ideal: 1280, max: 1920 }, // HD ರೆಸಲ್ಯೂಶನ್
+                height: { min: 480, ideal: 720, max: 1080 },
+                frameRate: { ideal: 30 }
+            }, 
+            audio: { echoCancellation: true, noiseSuppression: true } 
         });
-        document.getElementById("localVideo").srcObject=myStream;
-    }catch(e){ alert("Camera permission required"); }
+        document.getElementById("localVideo").srcObject = myStream;
+    } catch(e) { alert("Camera error: " + e.message); }
 }
 
+// ವೇಗವಾಗಿ ಮತ್ತು ನಿರಂತರವಾಗಿ ಕನೆಕ್ಟ್ ಮಾಡುವ ಲಾಜಿಕ್
 function findStranger(){
     if(currentCall) currentCall.close();
     if(conn) conn.close();
     document.getElementById("remoteVideo").srcObject = null;
     lobby.off(); 
 
-    // ಆಟೋಮ್ಯಾಟಿಕ್ ಆಗಿ ಆನ್‌ಲೈನ್ ಇರುವವರನ್ನು ಹುಡುಕಿ ಕನೆಕ್ಟ್ ಮಾಡುತ್ತದೆ
     lobby.once("value", snap => {
-        let strangerId = null;
-        let lobbyKey = null;
+        let availableStranger = null;
+        let strangerKey = null;
 
         snap.forEach(child => {
             if(child.val() !== myId){
-                strangerId = child.val();
-                lobbyKey = child.key;
+                availableStranger = child.val();
+                strangerKey = child.key;
+                return true; 
             }
         });
 
-        if(strangerId){
-            lobby.child(lobbyKey).remove().then(() => {
-                connectToStranger(strangerId); 
+        if(availableStranger){
+            // ಕನೆಕ್ಟ್ ಆಗುವ ಮುನ್ನ ಲಾಬಿಯಿಂದ ಐಡಿ ತೆಗೆದು, ಇತರರಿಗೆ ಸಿಗದಂತೆ ಮಾಡುತ್ತದೆ
+            lobby.child(strangerKey).remove().then(() => {
+                connectToStranger(availableStranger);
             });
         } else {
-            const myLobbyRef = lobby.push(myId);
-            myLobbyRef.onDisconnect().remove();
+            // ಯಾರು ಇಲ್ಲದಿದ್ದರೆ ಲಾಬಿಯಲ್ಲಿ ಕಾಯುತ್ತದೆ, ಯಾರಾದರೂ ಬಂದ ತಕ್ಷಣ ಕನೆಕ್ಟ್ ಮಾಡುತ್ತದೆ
+            const myRef = lobby.push(myId);
+            myRef.onDisconnect().remove();
 
-            lobby.on("child_added", newSnap => {
-                if(newSnap.val() !== myId){
+            lobby.on("child_added", s => {
+                if(s.val() !== myId){
                     lobby.off();
-                    findStranger(); 
+                    findStranger();
                 }
             });
         }
@@ -144,12 +154,13 @@ function findStranger(){
 }
 
 function connectToStranger(id){
+    // ಸ್ಪೀಡ್ ಹೆಚ್ಚಿಸಲು ಡಿಲೇ ಕಡಿಮೆ ಮಾಡಲಾಗಿದೆ
     setTimeout(() => {
         currentCall = peer.call(id, myStream);
         setupCall(currentCall);
         conn = peer.connect(id);
         setupChat();
-    }, 1000); 
+    }, 500); 
 }
 
 function setupCall(call){ 
@@ -186,6 +197,11 @@ async function flipCamera(){
     facing = facing === "user" ? "environment" : "user"; 
     myStream.getTracks().forEach(track => track.stop());
     await startCamera();
+    if(currentCall && currentCall.peerConnection) {
+        const videoTrack = myStream.getVideoTracks()[0];
+        const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
+        if(sender) sender.replaceTrack(videoTrack);
+    }
 }
 </script>
 </body>
