@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100vh; }
+body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100dvh; display: flex; flex-direction: column; }
 
 /* Entry Animation */
 #entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:1000; }
@@ -18,27 +18,26 @@ body{ margin:0; background:#000; font-family:sans-serif; color:white; overflow:h
 .letter { font-size: 45px; font-weight: bold; color: #ff0055; text-shadow: 0 0 15px #ff0055; opacity: 0; transform: scale(0.5); animation: bounceIn 0.5s forwards; }
 @keyframes bounceIn { to { opacity: 1; transform: scale(1); } }
 
-.main{ display:flex; flex-direction:column; height:100vh; }
 .video-section{ flex:1; position:relative; display:flex; background:#111; overflow: hidden; }
 video{ width:100%; height:100%; object-fit:cover; background:#000; }
 
-#localVideo{ position:absolute; bottom:85px; right:15px; width:110px; height:150px; border:2px solid #55eefc; border-radius:12px; z-index: 20; object-fit: cover; background: #222; }
+#localVideo{ position:absolute; bottom:20px; right:15px; width:100px; height:140px; border:2px solid #55eefc; border-radius:12px; z-index: 20; object-fit: cover; background: #222; }
 
-.controls{ position:absolute; bottom:85px; width:100%; display:flex; justify-content:center; gap:25px; z-index: 30; }
-.btn{ width:50px; height:50px; border-radius:50%; border:none; background:rgba(255,255,255,0.25); color:white; font-size:20px; cursor:pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); transition: 0.3s; }
-.btn:active { transform: scale(0.9); background: #ff0055; }
+.controls{ position:absolute; bottom:20px; left:15px; display:flex; flex-direction: column; gap:15px; z-index: 30; }
+.btn{ width:45px; height:45px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); color:white; font-size:18px; cursor:pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
 
-.bottom{ background:#000; padding:10px; display:flex; gap:10px; align-items: center; z-index: 40; height: 70px; border-top: 1px solid #222; }
-.next{ background:#ff0055; border:none; padding:12px 25px; border-radius:30px; color:white; font-weight: bold; cursor:pointer; font-size: 16px; transition: 0.3s; }
-.next:hover { background: #ff3377; }
-input{ flex:1; padding:12px 20px; border:none; border-radius:30px; background:#222; color:white; outline: none; font-size: 15px; }
-.send-btn { background:#333; border:none; padding:12px 25px; border-radius:30px; color:white; font-weight: bold; cursor:pointer; font-size: 14px; }
-
-.chatBox{ position:absolute; top:80px; left:50%; transform: translateX(-50%); width:85%; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.4); padding:10px; border-radius:15px; font-size:14px; pointer-events: none; z-index: 25; display: flex; flex-direction: column; gap: 5px; scroll-behavior: smooth; }
+/* ಚಾಟ್ ಬಾಕ್ಸ್ ವಿಡಿಯೋ ಮೇಲೆ ಕಾಣುವಂತೆ */
+.chatBox{ position:absolute; bottom:170px; left:15px; width:70%; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:10px; font-size:13px; pointer-events: none; z-index: 25; display: flex; flex-direction: column; gap: 4px; }
 .msg-tag { font-weight: bold; color: #55eefc; }
 
-.online{ position:absolute; top:20px; left:15px; background:rgba(255, 255, 255, 0.1); padding:6px 15px; border-radius:20px; font-size:12px; font-weight:bold; z-index: 50; border: 1px solid rgba(255,255,255,0.2); }
-.status-msg { position: absolute; top: 50%; width: 100%; text-align: center; color: #777; font-size: 14px; z-index: 5; }
+/* ಕೆಳಗಿನ ಬಟನ್ ಮತ್ತು ಇನ್‌ಪುಟ್ ಜಾಗ (Fixed height for visibility) */
+.bottom-area { background:#111; padding: 10px 15px; display:flex; gap:8px; align-items: center; height: 60px; border-top: 1px solid #222; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.next{ background:#ff0055; border:none; padding:10px 18px; border-radius:20px; color:white; font-weight: bold; cursor:pointer; font-size: 14px; white-space: nowrap; }
+input{ flex:1; padding:10px 15px; border:none; border-radius:20px; background:#222; color:white; outline: none; font-size: 14px; }
+.send-btn { background:#333; border:none; padding:10px 15px; border-radius:20px; color:white; font-size: 13px; }
+
+.online{ position:absolute; top:20px; left:15px; background:rgba(255, 0, 85, 0.7); padding:5px 12px; border-radius:20px; font-size:12px; font-weight:bold; z-index: 50; }
+.status-msg { position: absolute; top: 40%; width: 100%; text-align: center; color: #aaa; font-size: 14px; }
 </style>
 </head>
 
@@ -47,29 +46,28 @@ input{ flex:1; padding:12px 20px; border:none; border-radius:30px; background:#2
     <div class="logo-container" id="logoText"></div>
 </div>
 
-<div class="main">
-    <div class="video-section">
-        <div class="online">Online: <span id="onlineCount">0</span></div>
-        <div id="status" class="status-msg">ಕ್ಯಾಮೆರಾ ಸಿದ್ಧವಾಗುತ್ತಿದೆ...</div>
-        <div id="chatBox" class="chatBox"></div>
-        <video id="remoteVideo" autoplay playsinline></video>
-        <video id="localVideo" autoplay muted playsinline></video>
-        
-        <div class="controls">
-            <button class="btn" onclick="toggleAudio()" id="micBtn">🎤</button>
-            <button class="btn" onclick="toggleVideo()" id="vidBtn">🎥</button>
-            <button class="btn" onclick="flipCamera()">🔄</button>
-        </div>
-    </div>
-    <div class="bottom">
-        <button class="next" onclick="findStranger()">NEXT</button>
-        <input id="chatInput" placeholder="ಮೆಸೇಜ್ ಟೈಪ್ ಮಾಡಿ...">
-        <button class="send-btn" onclick="sendMsg()">SEND</button>
+<div class="video-section">
+    <div class="online">Online: <span id="onlineCount">0</span></div>
+    <div id="status" class="status-msg">ಕನೆಕ್ಟ್ ಆಗುತ್ತಿದೆ...</div>
+    <div id="chatBox" class="chatBox"></div>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay muted playsinline></video>
+    
+    <div class="controls">
+        <button class="btn" onclick="toggleAudio()" id="micBtn">🎤</button>
+        <button class="btn" onclick="toggleVideo()" id="vidBtn">🎥</button>
+        <button class="btn" onclick="flipCamera()">🔄</button>
     </div>
 </div>
 
+<div class="bottom-area">
+    <button class="next" onclick="findStranger()">NEXT</button>
+    <input id="chatInput" placeholder="ಹೇಳಿ...">
+    <button class="send-btn" onclick="sendMsg()">SEND</button>
+</div>
+
 <script>
-// --- ಇಲ್ಲಿ ನಿನ್ನ Firebase ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡು ---
+// ಫೈರ್‌ಬೇಸ್ ಕಾನ್ಫಿಗರೇಶನ್ (ನಿಮ್ಮ ಅಸಲಿ ಕೀಗಳನ್ನು ಇಲ್ಲಿ ಹಾಕಿ)
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "sykolive-846a3.firebaseapp.com",
@@ -80,13 +78,12 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const lobby = db.ref("lobby");
 const online = db.ref("online");
 
-// Logo Animation
+// ಎಂಟ್ರಿ ಅನಿಮೇಷನ್
 const text = "SYKOLIVE";
 const container = document.getElementById("logoText");
 text.split("").forEach((char, i) => {
@@ -102,22 +99,14 @@ setTimeout(() => {
     startApp();
 }, 3500);
 
-// Online Users Count
-online.on("value", snap => { 
-    document.getElementById("onlineCount").innerText = snap.numChildren(); 
-});
+online.on("value", snap => { document.getElementById("onlineCount").innerText = snap.numChildren(); });
 
 let peer, myId, myStream, currentCall, conn, facing="user";
 
 async function startApp(){
     await startCamera();
-    
-    // WebRTC connection servers
     peer = new Peer({ 
-        config: { 'iceServers': [
-            { urls: 'stun:stun.l.google.com:19302' }, 
-            { urls: 'stun:stun1.l.google.com:19302' }
-        ] } 
+        config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] } 
     });
     
     peer.on("open", id => {
@@ -136,25 +125,15 @@ async function startApp(){
     peer.on("connection", c => { 
         conn = c; 
         setupChat(); 
-        document.getElementById("status").innerText = "ಕನೆಕ್ಟ್ ಆಗಿದೆ!";
-    });
-
-    peer.on('error', (err) => { 
-        console.error(err); 
-        findStranger(); 
+        document.getElementById("status").innerText = "";
     });
 }
 
 async function startCamera(){
-    try{
-        myStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: facing, width: 640, height: 480 }, audio: true 
-        });
+    try {
+        myStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
         document.getElementById("localVideo").srcObject = myStream;
-        document.getElementById("status").innerText = "ಹುಡುಕಲು ಸಿದ್ಧ...";
-    } catch(e) { 
-        alert("ಕ್ಯಾಮೆರಾ ಮತ್ತು ಮೈಕ್ ಅನುಮತಿ ನೀಡಿ!"); 
-    }
+    } catch(e) { alert("ಕ್ಯಾಮೆರಾ ಪರ್ಮಿಷನ್ ಬೇಕು!"); }
 }
 
 function findStranger(){
@@ -164,55 +143,38 @@ function findStranger(){
     document.getElementById("chatBox").innerHTML = "";
     document.getElementById("status").innerText = "ಹೊಸಬರಿಗಾಗಿ ಹುಡುಕಲಾಗುತ್ತಿದೆ...";
     
-    lobby.off(); 
     lobby.once("value", snap => {
         let targetId = null;
         let targetKey = null;
-        snap.forEach(child => { 
-            if(child.val() !== myId){ 
-                targetId = child.val(); 
-                targetKey = child.key; 
-                return true; 
-            } 
-        });
+        snap.forEach(child => { if(child.val() !== myId){ targetId = child.val(); targetKey = child.key; return true; } });
         
         if(targetId){
             lobby.child(targetKey).remove().then(() => connectToStranger(targetId));
         } else {
             const myRef = lobby.push(myId);
             myRef.onDisconnect().remove();
-            lobby.on("child_added", s => { 
-                if(s.val() !== myId){ lobby.off(); findStranger(); } 
-            });
+            lobby.on("child_added", s => { if(s.val() !== myId){ lobby.off(); findStranger(); } });
         }
     });
 }
 
 function connectToStranger(id){
-    setTimeout(() => {
-        conn = peer.connect(id);
-        setupChat();
-        currentCall = peer.call(id, myStream);
-        handleStream(currentCall);
-    }, 500); 
+    conn = peer.connect(id);
+    setupChat();
+    currentCall = peer.call(id, myStream);
+    handleStream(currentCall);
 }
 
 function handleStream(call){
     call.on("stream", s => { 
-        const rv = document.getElementById("remoteVideo");
-        rv.srcObject = s;
-        rv.onloadedmetadata = () => {
-            rv.play();
-            document.getElementById("status").innerText = "";
-        };
+        document.getElementById("remoteVideo").srcObject = s;
+        document.getElementById("status").innerText = "";
     });
-    call.on("close", () => { findStranger(); });
 }
 
 function setupChat(){ 
     if(!conn) return; 
     conn.on("data", msg => { addChat("Stranger", msg); }); 
-    conn.on("close", () => { findStranger(); });
 }
 
 function sendMsg(){
@@ -231,30 +193,15 @@ function addChat(sender, text){
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function toggleAudio(){ 
-    const enabled = myStream.getAudioTracks()[0].enabled = !myStream.getAudioTracks()[0].enabled;
-    document.getElementById("micBtn").style.background = enabled ? "rgba(255,255,255,0.25)" : "red";
-}
-
-function toggleVideo(){ 
-    const enabled = myStream.getVideoTracks()[0].enabled = !myStream.getVideoTracks()[0].enabled;
-    document.getElementById("vidBtn").style.background = enabled ? "rgba(255,255,255,0.25)" : "red";
-}
-
+function toggleAudio(){ myStream.getAudioTracks()[0].enabled = !myStream.getAudioTracks()[0].enabled; }
+function toggleVideo(){ myStream.getVideoTracks()[0].enabled = !myStream.getVideoTracks()[0].enabled; }
 async function flipCamera(){ 
     facing = (facing === "user") ? "environment" : "user"; 
-    myStream.getTracks().forEach(track => track.stop());
+    myStream.getTracks().forEach(t => t.stop());
     await startCamera();
-    if(currentCall && currentCall.peerConnection){
-        const videoTrack = myStream.getVideoTracks()[0];
-        const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
-        if(sender) sender.replaceTrack(videoTrack);
-    }
 }
 
-document.getElementById("chatInput").addEventListener("keypress", (e) => {
-    if(e.key === "Enter") sendMsg();
-});
+document.getElementById("chatInput").addEventListener("keypress", (e) => { if(e.key === "Enter") sendMsg(); });
 </script>
 </body>
 </html>
