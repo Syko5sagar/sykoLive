@@ -10,221 +10,27 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-
-body,html{
-margin:0;
-padding:0;
-background:#000;
-font-family:sans-serif;
-color:white;
-overflow:hidden;
-height:100%;
-width:100%;
-position:fixed;
-}
-
-.main-wrapper{
-display:flex;
-flex-direction:column;
-height:100dvh;
-width:100vw;
-}
-
-.video-grid{
-flex:1;
-position:relative;
-background:#111;
-overflow:hidden;
-transition:0.1s;
-}
-
-/* voice border */
-.video-grid.voice-border{
-box-shadow:0 0 20px #ff0055,0 0 50px #ff0055,0 0 90px #ff0055;
-animation:voicePulse .3s infinite alternate;
-}
-
-@keyframes voicePulse{
-0%{box-shadow:0 0 10px #ff0055;}
-100%{box-shadow:0 0 80px #ff0055;}
-}
-
-#remoteVideo{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-#localVideo{
-position:absolute;
-bottom:10px;
-right:10px;
-width:100px;
-height:140px;
-border:2px solid #55eefc;
-border-radius:12px;
-z-index:100;
-object-fit:cover;
-}
-
-#magicCanvas{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:80;
-pointer-events:none;
-}
-
-.side-controls{
-position:absolute;
-left:10px;
-top:30%;
-display:flex;
-flex-direction:column;
-gap:15px;
-z-index:110;
-}
-
-.control-btn{
-width:45px;
-height:45px;
-border-radius:50%;
-border:none;
-background:rgba(255,255,255,0.2);
-color:white;
-font-size:18px;
-cursor:pointer;
-}
-
-/* emoji panel */
-
-#emojiPanel{
-position:absolute;
-right:10px;
-top:30%;
-background:rgba(0,0,0,0.8);
-padding:10px;
-border-radius:12px;
-display:none;
-flex-wrap:wrap;
-width:150px;
-gap:6px;
-z-index:200;
-}
-
-.emoji-item{
-font-size:25px;
-cursor:pointer;
-}
-
-/* emoji rain */
-
-.emoji-rain{
-position:absolute;
-font-size:45px;
-animation:emojiFall 2s linear forwards;
-}
-
-@keyframes emojiFall{
-0%{transform:translateY(-50px);opacity:1;}
-100%{transform:translateY(110vh);opacity:0;}
-}
-
-/* heart reaction */
-
-.heart{
-position:absolute;
-font-size:70px;
-animation:heartUp 1.5s forwards;
-pointer-events:none;
-}
-
-@keyframes heartUp{
-0%{transform:scale(.5);opacity:1;}
-100%{transform:translateY(-200px) scale(1.4);opacity:0;}
-}
-
-.info-tag{
-position:absolute;
-top:10px;
-left:10px;
-background:rgba(0,0,0,0.6);
-padding:5px 12px;
-border-radius:20px;
-font-size:12px;
-z-index:110;
-}
-
-#typing{
-position:absolute;
-bottom:140px;
-left:15px;
-font-size:13px;
-opacity:.7;
-}
-
-#chatBox{
-position:absolute;
-bottom:10px;
-left:10px;
-width:65%;
-max-height:120px;
-overflow-y:auto;
-padding:5px;
-font-size:13px;
-}
-
-.action-bar{
-height:70px;
-background:#000;
-border-top:1px solid #222;
-display:flex;
-align-items:center;
-padding:0 10px;
-gap:8px;
-}
-
-.next-btn{
-background:#ff0055;
-border:none;
-padding:12px 20px;
-border-radius:25px;
-color:white;
-font-weight:bold;
-}
-
-input{
-flex:1;
-background:#1a1a1a;
-border:1px solid #333;
-padding:12px 15px;
-border-radius:25px;
-color:white;
-}
-
-.send-btn{
-background:#333;
-border:none;
-padding:12px 18px;
-border-radius:25px;
-color:white;
-}
-
-#entry{
-position:fixed;
-width:100%;
-height:100%;
-background:#000;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:35px;
-color:#ff0055;
-z-index:1000;
-}
-
+body,html{margin:0;padding:0;background:#000;font-family:sans-serif;color:white;overflow:hidden;height:100%;width:100%;position:fixed;}
+.main-wrapper{display:flex;flex-direction:column;height:100dvh;width:100vw;}
+.video-grid{flex:1;position:relative;background:#111;overflow:hidden;}
+#remoteVideo{width:100%;height:100%;object-fit:cover;}
+#localVideo{position:absolute;bottom:10px;right:10px;width:100px;height:140px;border:2px solid #55eefc;border-radius:12px;z-index:100;object-fit:cover;background:#222;}
+#magicCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:80;pointer-events:none;}
+.side-controls{position:absolute;left:10px;top:20%;display:flex;flex-direction:column;gap:15px;z-index:110;}
+.control-btn{width:45px;height:45px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:white;font-size:18px;cursor:pointer;transition:0.3s;}
+#emojiPanel{position:absolute;right:10px;top:30%;background:rgba(0,0,0,0.8);padding:10px;border-radius:12px;display:none;flex-wrap:wrap;width:150px;gap:6px;z-index:200;}
+.emoji-item{font-size:25px;cursor:pointer;}
+.emoji-rain{position:absolute;font-size:45px;animation:emojiFall 2s linear forwards;z-index:300;}
+@keyframes emojiFall{0%{transform:translateY(-50px);opacity:1;}100%{transform:translateY(110vh);opacity:0;}}
+.heart{position:absolute;font-size:70px;animation:heartUp 1.5s forwards;pointer-events:none;z-index:300;}
+@keyframes heartUp{0%{transform:scale(.5);opacity:1;}100%{transform:translateY(-200px) scale(1.4);opacity:0;}}
+.info-tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);padding:5px 12px;border-radius:20px;font-size:12px;z-index:110;}
+#chatBox{position:absolute;bottom:10px;left:10px;width:65%;max-height:120px;overflow-y:auto;z-index:110;text-shadow:1px 1px 2px #000;}
+.action-bar{height:70px;background:#000;border-top:1px solid #222;display:flex;align-items:center;padding:0 10px;gap:8px;}
+.next-btn{background:#ff0055;border:none;padding:12px 20px;border-radius:25px;color:white;font-weight:bold;cursor:pointer;}
+input{flex:1;background:#1a1a1a;border:1px solid #333;padding:12px 15px;border-radius:25px;color:white;}
+.send-btn{background:#333;border:none;padding:12px 18px;border-radius:25px;color:white;cursor:pointer;}
+#entry{position:fixed;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;font-size:35px;color:#ff0055;z-index:2000;transition: opacity 1s;}
 </style>
 </head>
 
@@ -233,126 +39,142 @@ z-index:1000;
 <div id="entry">SYKO LIVE</div>
 
 <div class="main-wrapper">
+    <div class="video-grid" id="videoGrid">
+        <div class="info-tag">Online: <span id="count">0</span> | <span id="status">Connecting...</span></div>
+        <canvas id="magicCanvas"></canvas>
+        <div id="chatBox"></div>
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay muted playsinline></video>
 
-<div class="video-grid" id="videoGrid">
+        <div class="side-controls">
+            <button class="control-btn" id="micBtn">🎤</button>
+            <button class="control-btn" id="vidBtn">🎥</button>
+            <button class="control-btn" id="drawBtn">✏️</button>
+            <button class="control-btn" id="clearBtn">🗑️</button>
+            <button class="control-btn" id="emojiBtn">😊</button>
+        </div>
 
-<div class="info-tag">
-Online: <span id="count">0</span> |
-<span id="status">Loading...</span>
-</div>
+        <div id="emojiPanel">
+            <span class="emoji-item">😂</span><span class="emoji-item">🔥</span><span class="emoji-item">😍</span>
+            <span class="emoji-item">😎</span><span class="emoji-item">😜</span><span class="emoji-item">😱</span>
+            <span class="emoji-item">❤️</span><span class="emoji-item">👍</span><span class="emoji-item">✨</span>
+        </div>
+    </div>
 
-<div id="typing"></div>
-
-<canvas id="magicCanvas"></canvas>
-
-<div id="chatBox"></div>
-
-<video id="remoteVideo" autoplay playsinline></video>
-<video id="localVideo" autoplay muted playsinline></video>
-
-<div class="side-controls">
-<button class="control-btn" id="micBtn">🎤</button>
-<button class="control-btn" id="vidBtn">🎥</button>
-<button class="control-btn" id="drawBtn">✏️</button>
-<button class="control-btn" id="clearBtn">🗑️</button>
-<button class="control-btn" id="flipBtn">🔄</button>
-<button class="control-btn" id="emojiBtn">😊</button>
-</div>
-
-<div id="emojiPanel">
-<span class="emoji-item">😂</span>
-<span class="emoji-item">🔥</span>
-<span class="emoji-item">😍</span>
-<span class="emoji-item">😎</span>
-<span class="emoji-item">😜</span>
-<span class="emoji-item">😱</span>
-<span class="emoji-item">🥳</span>
-<span class="emoji-item">❤️</span>
-<span class="emoji-item">👍</span>
-</div>
-
-</div>
-
-<div class="action-bar">
-<button class="next-btn" id="nextBtn">NEXT</button>
-<input type="text" id="chatInput" placeholder="ಹಲೋ ಹೇಳಿ...">
-<button class="send-btn" id="sendBtn">SEND</button>
-</div>
-
+    <div class="action-bar">
+        <button class="next-btn" id="nextBtn">NEXT</button>
+        <input type="text" id="chatInput" placeholder="ಹಲೋ ಹೇಳಿ...">
+        <button class="send-btn" id="sendBtn">SEND</button>
+    </div>
 </div>
 
 <script>
-
-/* emoji panel */
-
-const emojiBtn=document.getElementById("emojiBtn");
-const emojiPanel=document.getElementById("emojiPanel");
-
-emojiBtn.onclick=()=>{
-emojiPanel.style.display=
-emojiPanel.style.display==="flex"?"none":"flex";
+// --- 1. ಎಂಟ್ರಿ ಸ್ಕ್ರೀನ್ ರಿಮೂವಲ್ ---
+window.onload = () => {
+    setTimeout(() => {
+        const entry = document.getElementById("entry");
+        entry.style.opacity = "0";
+        setTimeout(() => entry.style.display = "none", 1000);
+    }, 2000);
 };
 
-/* emoji rain */
+// --- 2. ಡ್ರಾಯಿಂಗ್ ಲಾಜಿಕ್ (Drawing Logic) ---
+const canvas = document.getElementById("magicCanvas");
+const ctx = canvas.getContext("2d");
+const drawBtn = document.getElementById("drawBtn");
+const clearBtn = document.getElementById("clearBtn");
+let drawingEnabled = false;
 
-document.querySelectorAll(".emoji-item").forEach(e=>{
-e.onclick=()=>{
-let emoji=e.innerText;
-
-for(let i=0;i<25;i++){
-let span=document.createElement("span");
-span.className="emoji-rain";
-span.innerText=emoji;
-span.style.left=Math.random()*100+"%";
-document.body.appendChild(span);
-setTimeout(()=>span.remove(),2000);
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
+window.onresize = resizeCanvas;
+resizeCanvas();
+
+drawBtn.onclick = () => {
+    drawingEnabled = !drawingEnabled;
+    canvas.style.pointerEvents = drawingEnabled ? "auto" : "none";
+    drawBtn.style.background = drawingEnabled ? "#ff0055" : "rgba(255,255,255,0.2)";
 };
+
+clearBtn.onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+let isDrawing = false;
+const startDraw = (e) => { isDrawing = true; draw(e); };
+const stopDraw = () => { isDrawing = false; ctx.beginPath(); };
+const draw = (e) => {
+    if(!isDrawing) return;
+    const x = e.clientX || e.touches[0].clientX;
+    const y = e.clientY || e.touches[0].clientY;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#55eefc";
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+};
+
+canvas.onmousedown = startDraw; canvas.onmousemove = draw; canvas.onmouseup = stopDraw;
+canvas.ontouchstart = startDraw; canvas.ontouchmove = (e) => { draw(e); e.preventDefault(); }; canvas.ontouchend = stopDraw;
+
+// --- 3. ಎಮೋಜಿ ಮತ್ತು ಹಾರ್ಟ್ ಆನಿಮೇಷನ್ ---
+const emojiBtn = document.getElementById("emojiBtn");
+const emojiPanel = document.getElementById("emojiPanel");
+
+emojiBtn.onclick = () => emojiPanel.style.display = emojiPanel.style.display === "flex" ? "none" : "flex";
+
+document.querySelectorAll(".emoji-item").forEach(e => {
+    e.onclick = () => {
+        for(let i=0; i<20; i++){
+            let span = document.createElement("span");
+            span.className = "emoji-rain";
+            span.innerText = e.innerText;
+            span.style.left = Math.random() * 100 + "%";
+            document.body.appendChild(span);
+            setTimeout(() => span.remove(), 2000);
+        }
+        emojiPanel.style.display = "none";
+    };
 });
 
-/* double tap heart */
-
-let lastTap=0;
-
-videoGrid.onclick=e=>{
-
-let now=new Date().getTime();
-
-if(now-lastTap<300){
-
-let heart=document.createElement("div");
-heart.className="heart";
-heart.innerText="❤️";
-heart.style.left=e.clientX+"px";
-heart.style.top=e.clientY+"px";
-
-document.body.appendChild(heart);
-
-setTimeout(()=>heart.remove(),1500);
-
-}
-
-lastTap=now;
-
+let lastTap = 0;
+document.getElementById("videoGrid").onclick = (e) => {
+    let now = Date.now();
+    if(now - lastTap < 300 && !drawingEnabled){
+        let heart = document.createElement("div");
+        heart.className = "heart";
+        heart.innerText = "❤️";
+        heart.style.left = e.clientX - 35 + "px";
+        heart.style.top = e.clientY - 35 + "px";
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 1500);
+    }
+    lastTap = now;
 };
 
-/* typing indicator */
-
-chatInput.addEventListener("input",()=>{
-if(conn){
-conn.send({type:"typing"});
-}
+// --- 4. ಮೈಕ್ ಮತ್ತು ವೀಡಿಯೊ ಕಂಟ್ರೋಲ್ ---
+let myStream;
+navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+    myStream = stream;
+    document.getElementById("localVideo").srcObject = stream;
+    document.getElementById("status").innerText = "Ready to Chat";
 });
 
-function showTyping(){
-typing.innerText="Stranger typing...";
-clearTimeout(window.typingTimer);
+document.getElementById("micBtn").onclick = function() {
+    let enabled = myStream.getAudioTracks()[0].enabled;
+    myStream.getAudioTracks()[0].enabled = !enabled;
+    this.innerText = enabled ? "🔇" : "🎤";
+    this.style.background = enabled ? "red" : "rgba(255,255,255,0.2)";
+};
 
-window.typingTimer=setTimeout(()=>{
-typing.innerText="";
-},2000);
-}
-
+document.getElementById("vidBtn").onclick = function() {
+    let enabled = myStream.getVideoTracks()[0].enabled;
+    myStream.getVideoTracks()[0].enabled = !enabled;
+    this.innerText = enabled ? "🚫" : "🎥";
+    this.style.background = enabled ? "red" : "rgba(255,255,255,0.2)";
+};
 </script>
 
 </body>
