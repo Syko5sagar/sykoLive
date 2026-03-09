@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Syko Live Pro V3 - Fully Fixed</title>
+<title>Syko Live Pro V3 - Ultra Fixed</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -16,6 +16,7 @@ body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color
 @keyframes bounceIn { to { opacity: 1; transform: scale(1); } }
 .main-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100vw; position: relative; }
 
+/* ವಾಯ್ಸ್ ರಿಯಾಕ್ಟಿವ್ ಬಾರ್ಡರ್ */
 .video-grid { 
     flex: 1; position: relative; display: flex; background: #111; overflow: hidden; 
     justify-content: center; align-items: center;
@@ -66,7 +67,7 @@ input { flex: 1; background: #222; border: none; padding: 10px 15px; border-radi
 </div>
 
 <script>
-// --- ನಿಮ್ಮ Firebase Config ಹಾಕಿ ---
+// --- Firebase Config (ನಿನ್ನ ಹಳೆಯ ಕೀಗಳನ್ನು ಇಲ್ಲಿ ತಪ್ಪದೇ ಹಾಕು) ---
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY", 
   authDomain: "sykolive-846a3.firebaseapp.com",
@@ -104,10 +105,7 @@ async function startApp() {
         document.getElementById("localVideo").srcObject = myStream;
         setupVoiceVisualizer(myStream);
         setupPeer();
-    } catch(e) { 
-        console.error(e);
-        alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ!"); 
-    }
+    } catch(e) { console.error(e); alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ!"); }
 }
 
 function setupPeer() {
@@ -115,7 +113,8 @@ function setupPeer() {
         config: { 
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' }, 
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
             ]
         }
     });
@@ -136,7 +135,6 @@ function setupPeer() {
             rv.srcObject = s;
             markAsConnected();
         });
-        call.on("close", () => { isConnected = false; });
     });
 
     peer.on("connection", c => {
@@ -150,11 +148,12 @@ function setupPeer() {
 function markAsConnected() {
     isConnected = true;
     document.getElementById("status").innerText = "Connected!";
+    lobby.child(myId).remove();
 }
 
 function findStranger() {
     isConnected = false;
-    lobby.child(myId).remove(); 
+    lobby.off(); 
     if(currentCall) currentCall.close();
     if(conn) conn.close();
     
@@ -164,7 +163,7 @@ function findStranger() {
     lobby.once("value", snap => {
         let waitingUsers = [];
         snap.forEach(child => {
-            if(child.key !== myId) waitingUsers.push(child.key);
+            if(child.val() !== myId) waitingUsers.push(child.val());
         });
 
         if(waitingUsers.length > 0) {
@@ -172,13 +171,13 @@ function findStranger() {
             lobby.child(randomUser).remove(); 
             connectTo(randomUser);
         } else {
-            lobby.child(myId).set(true);
+            lobby.child(myId).set(myId);
             lobby.child(myId).onDisconnect().remove();
             document.getElementById("status").innerText = "Waiting...";
             
             lobby.on("child_added", s => {
-                if(s.key !== myId && !isConnected) {
-                    lobby.off();
+                if(s.val() !== myId && !isConnected) {
+                    lobby.off(); 
                     findStranger();
                 }
             });
@@ -188,7 +187,9 @@ function findStranger() {
 
 function connectTo(id) {
     conn = peer.connect(id);
-    conn.on("data", data => addChat("Stranger", data));
+    conn.on("open", () => {
+        conn.on("data", data => addChat("Stranger", data));
+    });
     
     currentCall = peer.call(id, myStream);
     currentCall.on("stream", s => { 
@@ -197,6 +198,7 @@ function connectTo(id) {
     });
 }
 
+// ವಾಯ್ಸ್ ಬಾರ್ಡರ್ ಅನಿಮೇಷನ್
 function setupVoiceVisualizer(stream) {
     if (audioContext) audioContext.close();
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -223,25 +225,31 @@ function setupVoiceVisualizer(stream) {
     updateBorder();
 }
 
+// ಸ್ಮೂತ್ ಕ್ಯಾಮೆರಾ ಫ್ಲಿಪ್ (ವಾಯ್ಸ್ ಕಟ್ ಆಗಲ್ಲ)
 async function flipCamera() {
     facing = (facing === "user") ? "environment" : "user";
     try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: facing }, 
+            audio: true // ಆಡಿಯೋ ಕೂಡ ಹೊಸ ಸ್ಟ್ರೀಮ್ ಗೆ ಸೇರಿಸಿ
+        });
+
         const vTrack = newStream.getVideoTracks()[0];
-        
-        // ಲೋಕಲ್ ವಿಡಿಯೋ ಅಪ್ಡೇಟ್
+        const aTrack = newStream.getAudioTracks()[0];
+
         document.getElementById("localVideo").srcObject = newStream;
 
-        // ನಡೆಯುತ್ತಿರುವ ಕಾಲ್‌ನಲ್ಲಿ ಟ್ರ್ಯಾಕ್ ಬದಲಾವಣೆ
         if (currentCall && currentCall.peerConnection) {
             const senders = currentCall.peerConnection.getSenders();
-            const sender = senders.find(s => s.track.kind === 'video');
-            sender.replaceTrack(vTrack);
+            const vs = senders.find(s => s.track.kind === 'video');
+            const as = senders.find(s => s.track.kind === 'audio');
+            if (vs) vs.replaceTrack(vTrack);
+            if (as) as.replaceTrack(aTrack);
         }
 
         myStream.getTracks().forEach(t => t.stop());
         myStream = newStream;
-        setupVoiceVisualizer(myStream);
+        setupVoiceVisualizer(myStream); // ಹೊಸ ಮೈಕ್ ಗೆ ಬಾರ್ಡರ್ ಮರುಹೊಂದಿಸಿ
     } catch (e) { console.error(e); }
 }
 
