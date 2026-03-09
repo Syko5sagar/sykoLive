@@ -3,237 +3,527 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Syko Live Ultra - Final Fix</title>
+<title>Syko Live Ultra</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
-body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100%; width: 100%; position: fixed; }
-.main-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100vw; position: relative; }
 
-/* ವಿಡಿಯೋ ಏರಿಯಾ */
-.video-grid { flex: 1; position: relative; background: #111; overflow: hidden; }
-#remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-#localVideo { position: absolute; bottom: 10px; right: 10px; width: 100px; height: 140px; border: 2px solid #55eefc; border-radius: 12px; z-index: 100; object-fit: cover; }
+body,html{
+margin:0;
+padding:0;
+background:#000;
+font-family:sans-serif;
+color:white;
+overflow:hidden;
+height:100%;
+width:100%;
+position:fixed;
+}
 
-/* Magic Canvas */
-#magicCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; pointer-events: none; }
+.main-wrapper{
+display:flex;
+flex-direction:column;
+height:100dvh;
+width:100vw;
+}
 
-/* ಸೈಡ್ ಕಂಟ್ರೋಲ್ಸ್ */
-.side-controls { position: absolute; left: 10px; top: 30%; display: flex; flex-direction: column; gap: 15px; z-index: 110; }
-.control-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: rgba(255, 255, 255, 0.2); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-.control-btn.active { background: #ff0055; box-shadow: 0 0 15px #ff0055; }
+.video-grid{
+flex:1;
+position:relative;
+background:#111;
+overflow:hidden;
+transition:0.1s;
+}
 
-/* ಇನ್ಫೋ ಟ್ಯಾಗ್ */
-.info-tag { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; font-size: 12px; z-index: 110; border: 1px solid #333; }
+/* voice border design */
+.video-grid.voice-border{
+box-shadow:
+0 0 15px #ff0055,
+0 0 35px #ff0055,
+0 0 60px #ff0055,
+inset 0 0 25px rgba(255,0,85,0.7);
+animation:voicePulse .4s infinite alternate;
+}
 
-#chatBox { position: absolute; bottom: 10px; left: 10px; width: 65%; max-height: 120px; overflow-y: auto; padding: 5px; font-size: 13px; z-index: 50; text-shadow: 1px 1px 2px #000; }
+@keyframes voicePulse{
 
-/* ಬಾಟಮ್ ಬಾರ್ */
-.action-bar { height: 70px; background: #000; border-top: 1px solid #222; display: flex; align-items: center; padding: 0 10px; gap: 8px; z-index: 120; }
-.next-btn { background: #ff0055; border: none; padding: 12px 20px; border-radius: 25px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
-input { flex: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px 15px; border-radius: 25px; color: white; outline: none; }
-.send-btn { background: #333; border: none; padding: 12px 18px; border-radius: 25px; color: white; cursor: pointer; }
+0%{
+box-shadow:
+0 0 10px #ff0055,
+0 0 25px #ff0055,
+0 0 40px #ff0055;
+}
 
-#entry { position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; font-size:35px; color:#ff0055; z-index:1000; font-weight: bold; letter-spacing: 2px; }
+100%{
+box-shadow:
+0 0 25px #ff0055,
+0 0 60px #ff0055,
+0 0 90px #ff0055;
+}
+
+}
+
+#remoteVideo{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+#localVideo{
+position:absolute;
+bottom:10px;
+right:10px;
+width:100px;
+height:140px;
+border:2px solid #55eefc;
+border-radius:12px;
+z-index:100;
+object-fit:cover;
+}
+
+#magicCanvas{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:80;
+pointer-events:none;
+}
+
+.side-controls{
+position:absolute;
+left:10px;
+top:30%;
+display:flex;
+flex-direction:column;
+gap:15px;
+z-index:110;
+}
+
+.control-btn{
+width:45px;
+height:45px;
+border-radius:50%;
+border:none;
+background:rgba(255,255,255,0.2);
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+.control-btn.active{
+background:#ff0055;
+}
+
+.info-tag{
+position:absolute;
+top:10px;
+left:10px;
+background:rgba(0,0,0,0.6);
+padding:5px 12px;
+border-radius:20px;
+font-size:12px;
+z-index:110;
+}
+
+#chatBox{
+position:absolute;
+bottom:10px;
+left:10px;
+width:65%;
+max-height:120px;
+overflow-y:auto;
+padding:5px;
+font-size:13px;
+}
+
+.action-bar{
+height:70px;
+background:#000;
+border-top:1px solid #222;
+display:flex;
+align-items:center;
+padding:0 10px;
+gap:8px;
+}
+
+.next-btn{
+background:#ff0055;
+border:none;
+padding:12px 20px;
+border-radius:25px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+input{
+flex:1;
+background:#1a1a1a;
+border:1px solid #333;
+padding:12px 15px;
+border-radius:25px;
+color:white;
+}
+
+.send-btn{
+background:#333;
+border:none;
+padding:12px 18px;
+border-radius:25px;
+color:white;
+}
+
+#entry{
+position:fixed;
+width:100%;
+height:100%;
+background:#000;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:35px;
+color:#ff0055;
+z-index:1000;
+}
+
 </style>
 </head>
 
 <body>
+
 <div id="entry">SYKO LIVE</div>
 
 <div class="main-wrapper">
-    <div class="video-grid">
-        <div class="info-tag">Online: <span id="count">0</span> | <span id="status">ಸಿದ್ಧವಾಗುತ್ತಿದೆ...</span></div>
-        <canvas id="magicCanvas"></canvas>
-        <div id="chatBox"></div>
-        <video id="remoteVideo" autoplay playsinline></video>
-        <video id="localVideo" autoplay muted playsinline></video>
-        
-        <div class="side-controls">
-            <button class="control-btn" id="micBtn">🎤</button>
-            <button class="control-btn" id="vidBtn">🎥</button>
-            <button class="control-btn" id="drawBtn" title="Draw">✏️</button>
-            <button class="control-btn" id="clearBtn">🗑️</button>
-            <button class="control-btn" id="flipBtn">🔄</button>
-        </div>
-    </div>
-    <div class="action-bar">
-        <button class="next-btn" id="nextBtn">NEXT</button>
-        <input type="text" id="chatInput" placeholder="ಹಲೋ ಹೇಳಿ...">
-        <button class="send-btn" id="sendBtn">SEND</button>
-    </div>
+
+<div class="video-grid">
+
+<div class="info-tag">
+Online: <span id="count">0</span> |
+<span id="status">Loading...</span>
+</div>
+
+<canvas id="magicCanvas"></canvas>
+
+<div id="chatBox"></div>
+
+<video id="remoteVideo" autoplay playsinline></video>
+<video id="localVideo" autoplay muted playsinline></video>
+
+<div class="side-controls">
+<button class="control-btn" id="micBtn">🎤</button>
+<button class="control-btn" id="vidBtn">🎥</button>
+<button class="control-btn" id="drawBtn">✏️</button>
+<button class="control-btn" id="clearBtn">🗑️</button>
+<button class="control-btn" id="flipBtn">🔄</button>
+</div>
+
+</div>
+
+<div class="action-bar">
+<button class="next-btn" id="nextBtn">NEXT</button>
+<input type="text" id="chatInput" placeholder="ಹಲೋ ಹೇಳಿ...">
+<button class="send-btn" id="sendBtn">SEND</button>
+</div>
+
 </div>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyCZl507ZDCKEEok8tn8GXoKaWdvhhSbNlQ",
-    authDomain: "sykolive-846a3.firebaseapp.com",
-    databaseURL: "https://sykolive-846a3-default-rtdb.firebaseio.com",
-    projectId: "sykolive-846a3",
-    storageBucket: "sykolive-846a3.firebasestorage.app",
-    messagingSenderId: "785797986997",
-    appId: "1:785797986997:web:70c8263e3f712758bdbcfc"
+
+const firebaseConfig={
+apiKey:"AIzaSyCZl507ZDCKEEok8tn8GXoKaWdvhhSbNlQ",
+authDomain:"sykolive-846a3.firebaseapp.com",
+databaseURL:"https://sykolive-846a3-default-rtdb.firebaseio.com",
+projectId:"sykolive-846a3",
+storageBucket:"sykolive-846a3.firebasestorage.app",
+messagingSenderId:"705797986997",
+appId:"1:705797986997:web:70c8263e3f712758bdbcfc"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const lobby = db.ref("lobby");
-const onlineRef = db.ref("online_count");
 
-// Canvas Drawing Logic
-const canvas = document.getElementById('magicCanvas');
-const ctx = canvas.getContext('2d');
-let drawingMode = false;
-let lastX = 0; let lastY = 0;
+const db=firebase.database();
+const lobby=db.ref("lobby");
+const onlineRef=db.ref("online");
 
-function resizeCanvas() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+const canvas=document.getElementById("magicCanvas");
+const ctx=canvas.getContext("2d");
+
+function resizeCanvas(){
+canvas.width=canvas.offsetWidth;
+canvas.height=canvas.offsetHeight;
 }
-window.addEventListener('resize', resizeCanvas);
+
+window.addEventListener("resize",resizeCanvas);
 resizeCanvas();
 
-function drawLine(x1, y1, x2, y2, color = "#ff0055", isRemote = false) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    
-    if(!isRemote && conn) {
-        conn.send({ type: 'draw', x1: x1/canvas.width, y1: y1/canvas.height, x2: x2/canvas.width, y2: y2/canvas.height });
-    }
-}
+let drawing=false,lastX=0,lastY=0;
 
-canvas.addEventListener('mousedown', (e) => { [lastX, lastY] = [e.offsetX, e.offsetY]; });
-canvas.addEventListener('mousemove', (e) => {
-    if(e.buttons === 1 && drawingMode) {
-        drawLine(lastX, lastY, e.offsetX, e.offsetY);
-        [lastX, lastY] = [e.offsetX, e.offsetY];
-    }
+function drawLine(x1,y1,x2,y2,color="#ff0055",remote=false){
+
+ctx.strokeStyle=color;
+ctx.lineWidth=4;
+ctx.lineCap="round";
+
+ctx.beginPath();
+ctx.moveTo(x1,y1);
+ctx.lineTo(x2,y2);
+ctx.stroke();
+
+if(!remote && conn){
+
+conn.send({
+type:"draw",
+x1:x1/canvas.width,
+y1:y1/canvas.height,
+x2:x2/canvas.width,
+y2:y2/canvas.height
 });
 
-// Touch support for smooth mobile drawing
-canvas.addEventListener('touchstart', (e) => {
-    const t = e.touches[0]; const rect = canvas.getBoundingClientRect();
-    lastX = t.clientX - rect.left; lastY = t.clientY - rect.top;
+}
+
+}
+
+canvas.onmousedown=e=>{
+drawing=true;
+lastX=e.offsetX;
+lastY=e.offsetY;
+};
+
+canvas.onmousemove=e=>{
+if(drawing && drawingMode){
+drawLine(lastX,lastY,e.offsetX,e.offsetY);
+lastX=e.offsetX;
+lastY=e.offsetY;
+}
+};
+
+window.onmouseup=()=>drawing=false;
+
+let drawingMode=false;
+
+drawBtn.onclick=()=>{
+drawingMode=!drawingMode;
+canvas.style.pointerEvents=drawingMode?"auto":"none";
+};
+
+clearBtn.onclick=()=>{
+ctx.clearRect(0,0,canvas.width,canvas.height);
+if(conn) conn.send({type:"clear"});
+};
+
+let peer,myId,myStream,conn,currentCall;
+let facing="user";
+
+async function getMedia(){
+
+myStream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:facing},
+audio:true
 });
-canvas.addEventListener('touchmove', (e) => {
-    if(drawingMode) {
-        e.preventDefault();
-        const t = e.touches[0]; const rect = canvas.getBoundingClientRect();
-        const curX = t.clientX - rect.left; const curY = t.clientY - rect.top;
-        drawLine(lastX, lastY, curX, curY);
-        [lastX, lastY] = [curX, curY];
-    }
+
+localVideo.srcObject=myStream;
+
+}
+
+flipBtn.onclick=async()=>{
+facing=facing==="user"?"environment":"user";
+await getMedia();
+};
+
+async function start(){
+
+await getMedia();
+
+/* voice detection */
+
+const audioCtx=new AudioContext();
+const analyser=audioCtx.createAnalyser();
+const mic=audioCtx.createMediaStreamSource(myStream);
+
+mic.connect(analyser);
+
+const data=new Uint8Array(analyser.frequencyBinCount);
+
+function voiceLoop(){
+
+analyser.getByteFrequencyData(data);
+
+let volume=data.reduce((a,b)=>a+b)/data.length;
+
+if(volume>40){
+document.querySelector(".video-grid").classList.add("voice-border");
+}else{
+document.querySelector(".video-grid").classList.remove("voice-border");
+}
+
+requestAnimationFrame(voiceLoop);
+}
+
+voiceLoop();
+
+peer=new Peer(undefined,{
+host:"0.peerjs.com",
+port:443,
+secure:true
 });
 
-document.getElementById('drawBtn').onclick = () => {
-    drawingMode = !drawingMode;
-    canvas.style.pointerEvents = drawingMode ? "auto" : "none";
-    document.getElementById('drawBtn').classList.toggle('active', drawingMode);
+peer.on("open",id=>{
+
+myId=id;
+
+onlineRef.child(id).set(true);
+onlineRef.child(id).onDisconnect().remove();
+
+findStranger();
+
+});
+
+peer.on("call",call=>{
+
+currentCall=call;
+call.answer(myStream);
+
+call.on("stream",s=>{
+remoteVideo.srcObject=s;
+status.innerText="Connected";
+});
+
+});
+
+peer.on("connection",c=>{
+
+conn=c;
+
+conn.on("data",d=>{
+
+if(d.type==="draw"){
+drawLine(
+d.x1*canvas.width,
+d.y1*canvas.height,
+d.x2*canvas.width,
+d.y2*canvas.height,
+"#55eefc",
+true
+);
+}
+else if(d.type==="clear"){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+else{
+addChat("Stranger",d);
+}
+
+});
+
+});
+
+}
+
+function findStranger(){
+
+status.innerText="Searching...";
+
+lobby.once("value",snap=>{
+
+let users=[];
+
+snap.forEach(c=>{
+if(c.key!==myId) users.push(c.key);
+});
+
+if(users.length>0){
+
+let target=users[Math.floor(Math.random()*users.length)];
+
+lobby.child(target).remove();
+
+connectTo(target);
+
+}else{
+
+lobby.child(myId).set(true);
+
+}
+
+});
+
+/* auto reconnect */
+
+setTimeout(()=>{
+if(!remoteVideo.srcObject){
+findStranger();
+}
+},7000);
+
+}
+
+function connectTo(id){
+
+conn=peer.connect(id);
+
+conn.on("data",d=>addChat("Stranger",d));
+
+currentCall=peer.call(id,myStream);
+
+currentCall.on("stream",s=>{
+remoteVideo.srcObject=s;
+status.innerText="Connected";
+});
+
+}
+
+onlineRef.on("value",snap=>{
+count.innerText=snap.numChildren();
+});
+
+function addChat(user,msg){
+
+chatBox.innerHTML+=`<div><b>${user}:</b> ${msg}</div>`;
+chatBox.scrollTop=chatBox.scrollHeight;
+
+}
+
+sendBtn.onclick=()=>{
+
+let m=chatInput.value;
+
+if(m && conn){
+
+conn.send(m);
+addChat("You",m);
+chatInput.value="";
+
+}
+
 };
 
-document.getElementById('clearBtn').onclick = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if(conn) conn.send({ type: 'clear' });
+chatInput.onkeypress=e=>{
+if(e.key==="Enter") sendBtn.onclick();
 };
 
-// PeerJS & Camera Flip Logic
-let peer, myId, myStream, conn, currentCall;
-let currentFacing = "user";
+nextBtn.onclick=findStranger;
 
-async function getMedia(facing) {
-    if(myStream) myStream.getTracks().forEach(t => t.stop());
-    myStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: facing }, 
-        audio: true 
-    });
-    document.getElementById('localVideo').srcObject = myStream;
-    if(currentCall) {
-        const videoTrack = myStream.getVideoTracks()[0];
-        const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
-        sender.replaceTrack(videoTrack);
-    }
-}
-
-document.getElementById('flipBtn').onclick = () => {
-    currentFacing = currentFacing === "user" ? "environment" : "user";
-    getMedia(currentFacing);
+micBtn.onclick=()=>{
+let t=myStream.getAudioTracks()[0];
+t.enabled=!t.enabled;
 };
 
-async function start() {
-    await getMedia(currentFacing);
-    peer = new Peer(undefined, { host: '0.peerjs.com', port: 443, secure: true });
-    
-    peer.on('open', id => { 
-        myId = id; 
-        onlineRef.child(id).set(true);
-        onlineRef.child(id).onDisconnect().remove();
-        findStranger(); 
-    });
-    
-    peer.on('call', call => {
-        currentCall = call;
-        call.answer(myStream);
-        call.on('stream', s => { document.getElementById('remoteVideo').srcObject = s; });
-        document.getElementById('status').innerText = "Connected!";
-    });
-
-    peer.on('connection', c => { conn = c; setupData(); });
-}
-
-function setupData() {
-    conn.on('data', d => {
-        if(d.type === 'draw') drawLine(d.x1*canvas.width, d.y1*canvas.height, d.x2*canvas.width, d.y2*canvas.height, "#55eefc", true);
-        else if(d.type === 'clear') ctx.clearRect(0, 0, canvas.width, canvas.height);
-        else addChat("Stranger", d);
-    });
-}
-
-function findStranger() {
-    document.getElementById('status').innerText = "ಹುಡುಕಲಾಗುತ್ತಿದೆ...";
-    lobby.once("value", snap => {
-        let users = [];
-        snap.forEach(c => { if(c.key !== myId) users.push(c.key); });
-        if(users.length > 0) {
-            let target = users[Math.floor(Math.random() * users.length)];
-            lobby.child(target).remove();
-            connectTo(target);
-        } else { lobby.child(myId).set(true); }
-    });
-}
-
-function connectTo(id) {
-    conn = peer.connect(id); setupData();
-    currentCall = peer.call(id, myStream);
-    currentCall.on('stream', s => { document.getElementById('remoteVideo').srcObject = s; });
-    document.getElementById('status').innerText = "Connected!";
-}
-
-onlineRef.on('value', snap => { document.getElementById('count').innerText = snap.numChildren(); });
-
-function addChat(user, msg) {
-    const cb = document.getElementById('chatBox');
-    cb.innerHTML += `<div><b style="color:#55eefc">${user}:</b> ${msg}</div>`;
-    cb.scrollTop = cb.scrollHeight;
-}
-
-document.getElementById('sendBtn').onclick = () => {
-    let m = document.getElementById('chatInput').value;
-    if(m && conn) { conn.send(m); addChat("You", m); document.getElementById('chatInput').value = ""; }
+vidBtn.onclick=()=>{
+let t=myStream.getVideoTracks()[0];
+t.enabled=!t.enabled;
 };
 
-document.getElementById('nextBtn').onclick = () => location.reload();
-document.getElementById('micBtn').onclick = () => { myStream.getAudioTracks()[0].enabled = !myStream.getAudioTracks()[0].enabled; document.getElementById('micBtn').classList.toggle('active'); };
-document.getElementById('vidBtn').onclick = () => { myStream.getVideoTracks()[0].enabled = !myStream.getVideoTracks()[0].enabled; document.getElementById('vidBtn').classList.toggle('active'); };
+setTimeout(()=>{
+entry.style.display="none";
+start();
+},2000);
 
-setTimeout(() => { document.getElementById('entry').style.display='none'; start(); }, 2000);
 </script>
+
 </body>
 </html>
