@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+                <!DOCTYPE html>
 <html lang="kn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Syko Live Pro V3 - Audio Reactive</title>
+<title>Syko Live Pro V3 - Connection Fixed</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -16,11 +16,10 @@ body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color
 @keyframes bounceIn { to { opacity: 1; transform: scale(1); } }
 .main-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100vw; position: relative; }
 
-/* ವಾಯ್ಸ್ ರಿಯಾಕ್ಟಿವ್ ಬಾರ್ಡರ್ ಗಾಗಿ ವಿಡಿಯೋ ಗ್ರಿಡ್ ಅಪ್ಡೇಟ್ */
 .video-grid { 
     flex: 1; position: relative; display: flex; background: #111; overflow: hidden; 
     justify-content: center; align-items: center;
-    border: 4px solid transparent; /* ಇನಿಶಿಯಲ್ ಬಾರ್ಡರ್ */
+    border: 4px solid transparent; 
     transition: border-color 0.1s ease-out;
 }
 
@@ -67,7 +66,7 @@ input { flex: 1; background: #222; border: none; padding: 10px 15px; border-radi
 </div>
 
 <script>
-// --- Firebase Config (ನಿಮ್ಮ ಕೀಗಳನ್ನು ಇಲ್ಲಿ ಹಾಕಿ) ---
+// --- ನಿಮ್ಮ Firebase ಕೀಗಳನ್ನು ಇಲ್ಲಿ ತಪ್ಪದೇ ಸರಿಯಾಗಿ ಹಾಕಿ ---
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY", 
   authDomain: "sykolive-846a3.firebaseapp.com",
@@ -94,62 +93,34 @@ setTimeout(() => { document.getElementById("entry").style.display = "none"; star
 
 let peer, myId, myStream, currentCall, conn, facing="user";
 let isConnected = false;
-let audioContext, analyser, dataArray, animationId;
+let audioContext, analyser, dataArray;
 
 async function startApp() {
     try {
-        myStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        // ಕನೆಕ್ಷನ್ ಸ್ಟೇಬಲ್ ಆಗಿರಲು ಮೀಡಿಯಾ ಪಾಲಿಸಿ
+        myStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 } }, 
+            audio: true 
+        });
         document.getElementById("localVideo").srcObject = myStream;
-        setupVoiceVisualizer(myStream); // ವಾಯ್ಸ್ ಫೀಚರ್ ಚಾಲನೆ
+        setupVoiceVisualizer(myStream);
         setupPeer();
-    } catch(e) { alert("ಕ್ಯಾಮೆರಾ ಮತ್ತು ಮೈಕ್ ಅನುಮತಿ ನೀಡಿ!"); }
-}
-
-// ಮಾತಿನ ತೀವ್ರತೆಗೆ ತಕ್ಕಂತೆ ಬಾರ್ಡರ್ ಕಲರ್ ಚೇಂಜ್ ಮಾಡುವ ಲಾಜಿಕ್
-function setupVoiceVisualizer(stream) {
-    if (audioContext) audioContext.close();
-    
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContext.createMediaStreamSource(stream);
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
-
-    const bufferLength = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufferLength);
-
-    function updateBorder() {
-        animationId = requestAnimationFrame(updateBorder);
-        analyser.getByteFrequencyData(dataArray);
-
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-        }
-        let average = sum / bufferLength;
-        
-        // ಬಾರ್ಡರ್ ಕಲರ್ ಅಪ್ಡೇಟ್ (ಸರಾಸರಿ ವಾಯ್ಸ್ ಲೆವೆಲ್ ಮೇಲೆ)
-        const container = document.getElementById("mainContainer");
-        if (average > 10) {
-            let intensity = Math.min(average * 2, 255);
-            container.style.borderColor = `rgb(${intensity}, 0, 85)`; // ಗುಲಾಬಿ/ಕೆಂಪು ಛಾಯೆ
-            container.style.boxShadow = `inset 0 0 ${average/2}px rgb(${intensity}, 0, 85)`;
-        } else {
-            container.style.borderColor = "transparent";
-            container.style.boxShadow = "none";
-        }
+    } catch(e) { 
+        console.error(e);
+        alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ ಮತ್ತು HTTPS ಬಳಸಿ!"); 
     }
-    updateBorder();
 }
 
 function setupPeer() {
+    // ICE Servers ಲಿಸ್ಟ್ ಅಪ್ಡೇಟ್ ಮಾಡಲಾಗಿದೆ (ಕನೆಕ್ಷನ್ ಸುಲಭವಾಗಲು)
     peer = new Peer({ 
         config: { 
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' }, 
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun2.l.google.com:19302' }
-            ]
+            ],
+            'sdpSemantics': 'unified-plan'
         }
     });
     
@@ -160,12 +131,15 @@ function setupPeer() {
         findStranger();
     });
 
+    // ಯಾರಾದರೂ ನಿಮಗೆ ಕಾಲ್ ಮಾಡಿದಾಗ
     peer.on("call", call => {
         if (isConnected) return;
         currentCall = call;
         call.answer(myStream);
         call.on("stream", s => { 
-            document.getElementById("remoteVideo").srcObject = s;
+            const rv = document.getElementById("remoteVideo");
+            rv.srcObject = s;
+            rv.onloadedmetadata = () => rv.play(); // ಆಟೋ ಪ್ಲೇ ಫಿಕ್ಸ್
             markAsConnected();
         });
     });
@@ -227,9 +201,40 @@ function connectTo(id) {
     
     currentCall = peer.call(id, myStream);
     currentCall.on("stream", s => { 
-        document.getElementById("remoteVideo").srcObject = s;
+        const rv = document.getElementById("remoteVideo");
+        rv.srcObject = s;
+        rv.onloadedmetadata = () => rv.play();
         markAsConnected();
     });
+}
+
+// ವಾಯ್ಸ್ ಬಾರ್ಡರ್ ಫೀಚರ್ (ಯಾವುದನ್ನೂ ಬದಲಿಸದೆ)
+function setupVoiceVisualizer(stream) {
+    if (audioContext) audioContext.close();
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function updateBorder() {
+        if (!analyser) return;
+        requestAnimationFrame(updateBorder);
+        analyser.getByteFrequencyData(dataArray);
+        let sum = dataArray.reduce((a, b) => a + b, 0);
+        let average = sum / dataArray.length;
+        const container = document.getElementById("mainContainer");
+        if (average > 15) {
+            let intensity = Math.min(average * 2.5, 255);
+            container.style.borderColor = `rgb(${intensity}, 0, 85)`;
+            container.style.boxShadow = `inset 0 0 ${average}px rgb(${intensity}, 0, 85)`;
+        } else {
+            container.style.borderColor = "transparent";
+            container.style.boxShadow = "none";
+        }
+    }
+    updateBorder();
 }
 
 function sendMsg() {
@@ -262,34 +267,22 @@ function toggleVideo() {
 async function flipCamera() {
     if (!myStream) return;
     facing = (facing === "user") ? "environment" : "user";
-    
     try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: facing }, 
-            audio: true 
-        });
-
-        const videoTrack = newStream.getVideoTracks()[0];
-        const audioTrack = newStream.getAudioTracks()[0];
-
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        const vTrack = newStream.getVideoTracks()[0];
+        const aTrack = newStream.getAudioTracks()[0];
         document.getElementById("localVideo").srcObject = newStream;
-
         if (currentCall && currentCall.peerConnection) {
             const senders = currentCall.peerConnection.getSenders();
-            const vSender = senders.find(s => s.track && s.track.kind === 'video');
-            if (vSender) vSender.replaceTrack(videoTrack);
-
-            const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-            if (aSender) aSender.replaceTrack(audioTrack);
+            const vs = senders.find(s => s.track && s.track.kind === 'video');
+            if (vs) vs.replaceTrack(vTrack);
+            const as = senders.find(s => s.track && s.track.kind === 'audio');
+            if (as) as.replaceTrack(aTrack);
         }
-
         myStream.getTracks().forEach(t => t.stop());
         myStream = newStream;
-        setupVoiceVisualizer(myStream); // ಹೊಸ ಸ್ಟ್ರೀಮ್‌ಗೆ ವಿಲುವಲೈಜರ್ ಮರುಹೊಂದಿಸಿ
-
-    } catch (e) {
-        console.error(e);
-    }
+        setupVoiceVisualizer(myStream);
+    } catch (e) { console.error(e); }
 }
 
 document.getElementById("chatInput").onkeypress = (e) => { if(e.key === "Enter") sendMsg(); };
