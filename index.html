@@ -1,9 +1,9 @@
-                <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="kn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Syko Live Pro V3 - Connection Fixed</title>
+<title>Syko Live Pro V3 - Fully Fixed</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -66,7 +66,7 @@ input { flex: 1; background: #222; border: none; padding: 10px 15px; border-radi
 </div>
 
 <script>
-// --- ನಿಮ್ಮ Firebase ಕೀಗಳನ್ನು ಇಲ್ಲಿ ತಪ್ಪದೇ ಸರಿಯಾಗಿ ಹಾಕಿ ---
+// --- ನಿಮ್ಮ Firebase Config ಹಾಕಿ ---
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY", 
   authDomain: "sykolive-846a3.firebaseapp.com",
@@ -97,9 +97,8 @@ let audioContext, analyser, dataArray;
 
 async function startApp() {
     try {
-        // ಕನೆಕ್ಷನ್ ಸ್ಟೇಬಲ್ ಆಗಿರಲು ಮೀಡಿಯಾ ಪಾಲಿಸಿ
         myStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 } }, 
+            video: { facingMode: facing }, 
             audio: true 
         });
         document.getElementById("localVideo").srcObject = myStream;
@@ -107,20 +106,17 @@ async function startApp() {
         setupPeer();
     } catch(e) { 
         console.error(e);
-        alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ ಮತ್ತು HTTPS ಬಳಸಿ!"); 
+        alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ!"); 
     }
 }
 
 function setupPeer() {
-    // ICE Servers ಲಿಸ್ಟ್ ಅಪ್ಡೇಟ್ ಮಾಡಲಾಗಿದೆ (ಕನೆಕ್ಷನ್ ಸುಲಭವಾಗಲು)
     peer = new Peer({ 
         config: { 
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' }, 
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ],
-            'sdpSemantics': 'unified-plan'
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
         }
     });
     
@@ -131,17 +127,16 @@ function setupPeer() {
         findStranger();
     });
 
-    // ಯಾರಾದರೂ ನಿಮಗೆ ಕಾಲ್ ಮಾಡಿದಾಗ
     peer.on("call", call => {
-        if (isConnected) return;
+        if (isConnected) { call.answer(); call.close(); return; }
         currentCall = call;
         call.answer(myStream);
         call.on("stream", s => { 
             const rv = document.getElementById("remoteVideo");
             rv.srcObject = s;
-            rv.onloadedmetadata = () => rv.play(); // ಆಟೋ ಪ್ಲೇ ಫಿಕ್ಸ್
             markAsConnected();
         });
+        call.on("close", () => { isConnected = false; });
     });
 
     peer.on("connection", c => {
@@ -155,23 +150,21 @@ function setupPeer() {
 function markAsConnected() {
     isConnected = true;
     document.getElementById("status").innerText = "Connected!";
-    lobby.child(myId).remove();
 }
 
 function findStranger() {
     isConnected = false;
-    lobby.off(); 
-    if(currentCall) { currentCall.close(); currentCall = null; }
-    if(conn) { conn.close(); conn = null; }
+    lobby.child(myId).remove(); 
+    if(currentCall) currentCall.close();
+    if(conn) conn.close();
     
     document.getElementById("remoteVideo").srcObject = null;
     document.getElementById("status").innerText = "Searching...";
-    document.getElementById("chatBox").innerHTML = "";
-
+    
     lobby.once("value", snap => {
         let waitingUsers = [];
         snap.forEach(child => {
-            if(child.val() !== myId) waitingUsers.push(child.val());
+            if(child.key !== myId) waitingUsers.push(child.key);
         });
 
         if(waitingUsers.length > 0) {
@@ -179,13 +172,13 @@ function findStranger() {
             lobby.child(randomUser).remove(); 
             connectTo(randomUser);
         } else {
-            lobby.child(myId).set(myId);
+            lobby.child(myId).set(true);
             lobby.child(myId).onDisconnect().remove();
             document.getElementById("status").innerText = "Waiting...";
             
             lobby.on("child_added", s => {
-                if(s.val() !== myId && !isConnected) {
-                    lobby.off(); 
+                if(s.key !== myId && !isConnected) {
+                    lobby.off();
                     findStranger();
                 }
             });
@@ -195,20 +188,15 @@ function findStranger() {
 
 function connectTo(id) {
     conn = peer.connect(id);
-    conn.on("open", () => {
-        conn.on("data", data => addChat("Stranger", data));
-    });
+    conn.on("data", data => addChat("Stranger", data));
     
     currentCall = peer.call(id, myStream);
     currentCall.on("stream", s => { 
-        const rv = document.getElementById("remoteVideo");
-        rv.srcObject = s;
-        rv.onloadedmetadata = () => rv.play();
+        document.getElementById("remoteVideo").srcObject = s;
         markAsConnected();
     });
 }
 
-// ವಾಯ್ಸ್ ಬಾರ್ಡರ್ ಫೀಚರ್ (ಯಾವುದನ್ನೂ ಬದಲಿಸದೆ)
 function setupVoiceVisualizer(stream) {
     if (audioContext) audioContext.close();
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -219,11 +207,9 @@ function setupVoiceVisualizer(stream) {
     dataArray = new Uint8Array(analyser.frequencyBinCount);
 
     function updateBorder() {
-        if (!analyser) return;
         requestAnimationFrame(updateBorder);
         analyser.getByteFrequencyData(dataArray);
-        let sum = dataArray.reduce((a, b) => a + b, 0);
-        let average = sum / dataArray.length;
+        let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
         const container = document.getElementById("mainContainer");
         if (average > 15) {
             let intensity = Math.min(average * 2.5, 255);
@@ -235,6 +221,28 @@ function setupVoiceVisualizer(stream) {
         }
     }
     updateBorder();
+}
+
+async function flipCamera() {
+    facing = (facing === "user") ? "environment" : "user";
+    try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
+        const vTrack = newStream.getVideoTracks()[0];
+        
+        // ಲೋಕಲ್ ವಿಡಿಯೋ ಅಪ್ಡೇಟ್
+        document.getElementById("localVideo").srcObject = newStream;
+
+        // ನಡೆಯುತ್ತಿರುವ ಕಾಲ್‌ನಲ್ಲಿ ಟ್ರ್ಯಾಕ್ ಬದಲಾವಣೆ
+        if (currentCall && currentCall.peerConnection) {
+            const senders = currentCall.peerConnection.getSenders();
+            const sender = senders.find(s => s.track.kind === 'video');
+            sender.replaceTrack(vTrack);
+        }
+
+        myStream.getTracks().forEach(t => t.stop());
+        myStream = newStream;
+        setupVoiceVisualizer(myStream);
+    } catch (e) { console.error(e); }
 }
 
 function sendMsg() {
@@ -253,36 +261,15 @@ function addChat(user, msg) {
 }
 
 function toggleAudio() {
-    const audio = myStream.getAudioTracks()[0];
-    audio.enabled = !audio.enabled;
-    document.getElementById("micBtn").classList.toggle("off", !audio.enabled);
+    const track = myStream.getAudioTracks()[0];
+    track.enabled = !track.enabled;
+    document.getElementById("micBtn").classList.toggle("off", !track.enabled);
 }
 
 function toggleVideo() {
-    const video = myStream.getVideoTracks()[0];
-    video.enabled = !video.enabled;
-    document.getElementById("vidBtn").classList.toggle("off", !video.enabled);
-}
-
-async function flipCamera() {
-    if (!myStream) return;
-    facing = (facing === "user") ? "environment" : "user";
-    try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: true });
-        const vTrack = newStream.getVideoTracks()[0];
-        const aTrack = newStream.getAudioTracks()[0];
-        document.getElementById("localVideo").srcObject = newStream;
-        if (currentCall && currentCall.peerConnection) {
-            const senders = currentCall.peerConnection.getSenders();
-            const vs = senders.find(s => s.track && s.track.kind === 'video');
-            if (vs) vs.replaceTrack(vTrack);
-            const as = senders.find(s => s.track && s.track.kind === 'audio');
-            if (as) as.replaceTrack(aTrack);
-        }
-        myStream.getTracks().forEach(t => t.stop());
-        myStream = newStream;
-        setupVoiceVisualizer(myStream);
-    } catch (e) { console.error(e); }
+    const track = myStream.getVideoTracks()[0];
+    track.enabled = !track.enabled;
+    document.getElementById("vidBtn").classList.toggle("off", !track.enabled);
 }
 
 document.getElementById("chatInput").onkeypress = (e) => { if(e.key === "Enter") sendMsg(); };
