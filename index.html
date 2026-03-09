@@ -12,12 +12,16 @@
 <style>
 body,html{margin:0;padding:0;background:#000;font-family:sans-serif;color:white;overflow:hidden;height:100%;width:100%;position:fixed;}
 .main-wrapper{display:flex;flex-direction:column;height:100dvh;width:100vw;}
-.video-grid{flex:1;position:relative;background:#111;overflow:hidden;}
-#remoteVideo{width:100%;height:100%;object-fit:cover;}
+.video-grid{flex:1;position:relative;background:#111;overflow:hidden;transition:0.3s;}
+
+/* Voice Pulse Border Animation */
+.voice-border{box-shadow:inset 0 0 20px #ff0055, 0 0 30px #ff0055 !important; border: 3px solid #ff0055;}
+
+#remoteVideo{width:100%;height:100%;object-fit:cover;background:#111;}
 #localVideo{position:absolute;bottom:10px;right:10px;width:100px;height:140px;border:2px solid #55eefc;border-radius:12px;z-index:100;object-fit:cover;background:#222;}
 #magicCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:80;pointer-events:none;}
 .side-controls{position:absolute;left:10px;top:20%;display:flex;flex-direction:column;gap:15px;z-index:110;}
-.control-btn{width:45px;height:45px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:white;font-size:18px;cursor:pointer;transition:0.3s;}
+.control-btn{width:45px;height:45px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:white;font-size:18px;cursor:pointer;}
 #emojiPanel{position:absolute;right:10px;top:30%;background:rgba(0,0,0,0.8);padding:10px;border-radius:12px;display:none;flex-wrap:wrap;width:150px;gap:6px;z-index:200;}
 .emoji-item{font-size:25px;cursor:pointer;}
 .emoji-rain{position:absolute;font-size:45px;animation:emojiFall 2s linear forwards;z-index:300;}
@@ -25,12 +29,12 @@ body,html{margin:0;padding:0;background:#000;font-family:sans-serif;color:white;
 .heart{position:absolute;font-size:70px;animation:heartUp 1.5s forwards;pointer-events:none;z-index:300;}
 @keyframes heartUp{0%{transform:scale(.5);opacity:1;}100%{transform:translateY(-200px) scale(1.4);opacity:0;}}
 .info-tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);padding:5px 12px;border-radius:20px;font-size:12px;z-index:110;}
-#chatBox{position:absolute;bottom:10px;left:10px;width:65%;max-height:120px;overflow-y:auto;z-index:110;text-shadow:1px 1px 2px #000;}
+#chatBox{position:absolute;bottom:10px;left:10px;width:65%;max-height:120px;overflow-y:auto;z-index:110;}
 .action-bar{height:70px;background:#000;border-top:1px solid #222;display:flex;align-items:center;padding:0 10px;gap:8px;}
 .next-btn{background:#ff0055;border:none;padding:12px 20px;border-radius:25px;color:white;font-weight:bold;cursor:pointer;}
 input{flex:1;background:#1a1a1a;border:1px solid #333;padding:12px 15px;border-radius:25px;color:white;}
-.send-btn{background:#333;border:none;padding:12px 18px;border-radius:25px;color:white;cursor:pointer;}
-#entry{position:fixed;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;font-size:35px;color:#ff0055;z-index:2000;transition: opacity 1s;}
+.send-btn{background:#333;border:none;padding:12px 18px;border-radius:25px;color:white;}
+#entry{position:fixed;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;font-size:35px;color:#ff0055;z-index:2000;font-weight:bold;letter-spacing:5px;}
 </style>
 </head>
 
@@ -40,7 +44,7 @@ input{flex:1;background:#1a1a1a;border:1px solid #333;padding:12px 15px;border-r
 
 <div class="main-wrapper">
     <div class="video-grid" id="videoGrid">
-        <div class="info-tag">Online: <span id="count">0</span> | <span id="status">Connecting...</span></div>
+        <div class="info-tag">Online: <span id="count">1</span> | <span id="status">Connecting...</span></div>
         <canvas id="magicCanvas"></canvas>
         <div id="chatBox"></div>
         <video id="remoteVideo" autoplay playsinline></video>
@@ -57,7 +61,7 @@ input{flex:1;background:#1a1a1a;border:1px solid #333;padding:12px 15px;border-r
         <div id="emojiPanel">
             <span class="emoji-item">😂</span><span class="emoji-item">🔥</span><span class="emoji-item">😍</span>
             <span class="emoji-item">😎</span><span class="emoji-item">😜</span><span class="emoji-item">😱</span>
-            <span class="emoji-item">❤️</span><span class="emoji-item">👍</span><span class="emoji-item">✨</span>
+            <span class="emoji-item">❤️</span><span class="emoji-item">👍</span>
         </div>
     </div>
 
@@ -69,112 +73,115 @@ input{flex:1;background:#1a1a1a;border:1px solid #333;padding:12px 15px;border-r
 </div>
 
 <script>
-// --- 1. ಎಂಟ್ರಿ ಸ್ಕ್ರೀನ್ ರಿಮೂವಲ್ ---
-window.onload = () => {
-    setTimeout(() => {
-        const entry = document.getElementById("entry");
-        entry.style.opacity = "0";
-        setTimeout(() => entry.style.display = "none", 1000);
-    }, 2000);
-};
+// --- Configuration ---
+// ಗಮನಿಸಿ: ಇಲ್ಲಿ ನಿಮ್ಮ Firebase Config ಹಾಕಿದರೆ Online Count ಕೆಲಸ ಮಾಡುತ್ತದೆ.
+const firebaseConfig = { databaseURL: "https://YOUR-DB-NAME.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-// --- 2. ಡ್ರಾಯಿಂಗ್ ಲಾಜಿಕ್ (Drawing Logic) ---
+// --- Entry Screen ---
+setTimeout(() => {
+    const entry = document.getElementById("entry");
+    entry.style.transition = "1s";
+    entry.style.opacity = "0";
+    setTimeout(() => entry.style.display = "none", 1000);
+}, 2500);
+
+// --- Peer & Video Connection ---
+const peer = new Peer();
+let localStream;
+let currentCall;
+
+navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+    localStream = stream;
+    document.getElementById("localVideo").srcObject = stream;
+    document.getElementById("status").innerText = "Ready to Chat";
+    
+    // Voice Lighting Logic
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function updateVoiceBorder() {
+        analyser.getByteFrequencyData(dataArray);
+        let sum = dataArray.reduce((a, b) => a + b, 0);
+        let average = sum / bufferLength;
+        if (average > 30) {
+            document.getElementById("videoGrid").classList.add("voice-border");
+        } else {
+            document.getElementById("videoGrid").classList.remove("voice-border");
+        }
+        requestAnimationFrame(updateVoiceBorder);
+    }
+    updateVoiceBorder();
+});
+
+peer.on('call', call => {
+    call.answer(localStream);
+    call.on('stream', remoteStream => {
+        document.getElementById("remoteVideo").srcObject = remoteStream;
+    });
+});
+
+// --- Drawing Logic ---
 const canvas = document.getElementById("magicCanvas");
 const ctx = canvas.getContext("2d");
-const drawBtn = document.getElementById("drawBtn");
-const clearBtn = document.getElementById("clearBtn");
 let drawingEnabled = false;
 
-function resizeCanvas() {
+function setupCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-window.onresize = resizeCanvas;
-resizeCanvas();
+window.onresize = setupCanvas;
+setupCanvas();
 
-drawBtn.onclick = () => {
+document.getElementById("drawBtn").onclick = function() {
     drawingEnabled = !drawingEnabled;
+    this.style.background = drawingEnabled ? "#ff0055" : "rgba(255,255,255,0.2)";
     canvas.style.pointerEvents = drawingEnabled ? "auto" : "none";
-    drawBtn.style.background = drawingEnabled ? "#ff0055" : "rgba(255,255,255,0.2)";
 };
 
-clearBtn.onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+document.getElementById("clearBtn").onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 let isDrawing = false;
-const startDraw = (e) => { isDrawing = true; draw(e); };
-const stopDraw = () => { isDrawing = false; ctx.beginPath(); };
-const draw = (e) => {
+canvas.onmousedown = (e) => { if(drawingEnabled) { isDrawing = true; ctx.beginPath(); } };
+canvas.onmousemove = (e) => {
     if(!isDrawing) return;
-    const x = e.clientX || e.touches[0].clientX;
-    const y = e.clientY || e.touches[0].clientY;
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
+    ctx.lineWidth = 4;
     ctx.strokeStyle = "#55eefc";
-    ctx.lineTo(x, y);
+    ctx.lineTo(e.clientX, e.clientY);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
+};
+canvas.onmouseup = () => isDrawing = false;
+
+// --- Emoji Rain ---
+document.getElementById("emojiBtn").onclick = () => {
+    const p = document.getElementById("emojiPanel");
+    p.style.display = p.style.display === "flex" ? "none" : "flex";
 };
 
-canvas.onmousedown = startDraw; canvas.onmousemove = draw; canvas.onmouseup = stopDraw;
-canvas.ontouchstart = startDraw; canvas.ontouchmove = (e) => { draw(e); e.preventDefault(); }; canvas.ontouchend = stopDraw;
-
-// --- 3. ಎಮೋಜಿ ಮತ್ತು ಹಾರ್ಟ್ ಆನಿಮೇಷನ್ ---
-const emojiBtn = document.getElementById("emojiBtn");
-const emojiPanel = document.getElementById("emojiPanel");
-
-emojiBtn.onclick = () => emojiPanel.style.display = emojiPanel.style.display === "flex" ? "none" : "flex";
-
-document.querySelectorAll(".emoji-item").forEach(e => {
-    e.onclick = () => {
-        for(let i=0; i<20; i++){
-            let span = document.createElement("span");
-            span.className = "emoji-rain";
-            span.innerText = e.innerText;
-            span.style.left = Math.random() * 100 + "%";
-            document.body.appendChild(span);
-            setTimeout(() => span.remove(), 2000);
+document.querySelectorAll(".emoji-item").forEach(el => {
+    el.onclick = () => {
+        for(let i=0; i<15; i++) {
+            let s = document.createElement("span");
+            s.className = "emoji-rain";
+            s.innerText = el.innerText;
+            s.style.left = Math.random() * 100 + "vw";
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 2000);
         }
-        emojiPanel.style.display = "none";
     };
 });
 
-let lastTap = 0;
-document.getElementById("videoGrid").onclick = (e) => {
-    let now = Date.now();
-    if(now - lastTap < 300 && !drawingEnabled){
-        let heart = document.createElement("div");
-        heart.className = "heart";
-        heart.innerText = "❤️";
-        heart.style.left = e.clientX - 35 + "px";
-        heart.style.top = e.clientY - 35 + "px";
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 1500);
-    }
-    lastTap = now;
-};
-
-// --- 4. ಮೈಕ್ ಮತ್ತು ವೀಡಿಯೊ ಕಂಟ್ರೋಲ್ ---
-let myStream;
-navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-    myStream = stream;
-    document.getElementById("localVideo").srcObject = stream;
-    document.getElementById("status").innerText = "Ready to Chat";
+// --- Online Count (Firebase) ---
+const countRef = db.ref("online_users");
+countRef.on("value", snap => {
+    document.getElementById("count").innerText = snap.val() || 1;
 });
-
-document.getElementById("micBtn").onclick = function() {
-    let enabled = myStream.getAudioTracks()[0].enabled;
-    myStream.getAudioTracks()[0].enabled = !enabled;
-    this.innerText = enabled ? "🔇" : "🎤";
-    this.style.background = enabled ? "red" : "rgba(255,255,255,0.2)";
-};
-
-document.getElementById("vidBtn").onclick = function() {
-    let enabled = myStream.getVideoTracks()[0].enabled;
-    myStream.getVideoTracks()[0].enabled = !enabled;
-    this.innerText = enabled ? "🚫" : "🎥";
-    this.style.background = enabled ? "red" : "rgba(255,255,255,0.2)";
-};
 </script>
 
 </body>
