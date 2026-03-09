@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+            <!DOCTYPE html>
 <html lang="kn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Syko Live Ultra - Connection Fixed</title>
+<title>Syko Live Ultra - Official</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -12,17 +12,17 @@
 <style>
 body,html{margin:0;padding:0;background:#000;font-family:sans-serif;color:white;overflow:hidden;height:100%;width:100%;position:fixed;}
 .main-wrapper{display:flex;flex-direction:column;height:100dvh;width:100vw;}
-.video-grid{flex:1;position:relative;background:#111;overflow:hidden;}
+.video-grid{flex:1;position:relative;background:#111;overflow:hidden;transition:0.1s;}
 
-/* 🎤 Voice Lighting Border */
-.voice-border{box-shadow: inset 0 0 60px #ff0055, 0 0 40px #ff0055 !important; border: 4px solid #ff0055 !important; transition: 0.1s;}
+/* 🎤 Voice Pulse Border */
+.voice-border{box-shadow: inset 0 0 60px #ff0055, 0 0 40px #ff0055 !important; border: 4px solid #ff0055 !important;}
 
-#remoteVideo{width:100%;height:100%;object-fit:cover;background:#111;}
+#remoteVideo{width:100%;height:100%;object-fit:cover;background:#000;}
 #localVideo{position:absolute;bottom:10px;right:10px;width:110px;height:150px;border:2px solid #55eefc;border-radius:12px;z-index:100;object-fit:cover;background:#222;}
 #magicCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:80;pointer-events:none;}
 
-.side-controls{position:absolute;left:10px;top:15%;display:flex;flex-direction:column;gap:12px;z-index:110;}
-.control-btn{width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.side-controls{position:absolute;left:10px;top:20%;display:flex;flex-direction:column;gap:15px;z-index:110;}
+.control-btn{width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
 #emojiPanel{position:absolute;right:10px;top:30%;background:rgba(0,0,0,0.8);padding:10px;border-radius:12px;display:none;flex-wrap:wrap;width:150px;gap:8px;z-index:200;}
 .emoji-item{font-size:25px;cursor:pointer;}
@@ -30,10 +30,10 @@ body,html{margin:0;padding:0;background:#000;font-family:sans-serif;color:white;
 @keyframes emojiFall{0%{transform:translateY(-100px);opacity:1;}100%{transform:translateY(110vh);opacity:0;}}
 
 .info-tag{position:absolute;top:15px;left:15px;background:rgba(0,0,0,0.6);padding:6px 15px;border-radius:20px;font-size:12px;z-index:110;}
-#status{color:#00ff00; font-weight:bold;}
+#status{color:#00ff00;font-weight:bold;}
 
 .action-bar{height:80px;background:#000;border-top:1px solid #222;display:flex;align-items:center;padding:0 15px;gap:10px;}
-.next-btn{background:#ff0055;border:none;padding:14px 25px;border-radius:30px;color:white;font-weight:bold;cursor:pointer;font-size:16px;}
+.next-btn{background:#ff0055;border:none;padding:14px 25px;border-radius:30px;color:white;font-weight:bold;cursor:pointer;}
 input{flex:1;background:#1a1a1a;border:1px solid #333;padding:14px 20px;border-radius:30px;color:white;outline:none;}
 
 #entry{position:fixed;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;font-size:35px;color:#ff0055;z-index:3000;font-weight:bold;letter-spacing:5px;}
@@ -67,34 +67,29 @@ input{flex:1;background:#1a1a1a;border:1px solid #333;padding:14px 20px;border-r
     </div>
 
     <div class="action-bar">
-        <button class="next-btn" id="nextBtn">NEXT</button>
+        <button class="next-btn" onclick="location.reload()">NEXT</button>
         <input type="text" id="chatInput" placeholder="ಹಲೋ ಹೇಳಿ...">
         <button class="send-btn" style="background:#333;border:none;padding:14px 22px;border-radius:30px;color:white;">SEND</button>
     </div>
 </div>
 
 <script>
-// --- Firebase Database (Online matching logic) ---
+// --- Firebase Config ---
 const firebaseConfig = { databaseURL: "https://sykolive-default-rtdb.firebaseio.com" }; 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const peer = new Peer();
-let localStream;
-let currentFacingMode = "user";
-let myID = "";
+let localStream, myID, currentFacingMode = "user";
 
-// 1. Entry screen
-setTimeout(() => {
-    document.getElementById("entry").style.display = "none";
-}, 2500);
+// 1. Entry Screen
+setTimeout(() => document.getElementById("entry").style.display = "none", 2500);
 
-// 2. Camera Setup
+// 2. Camera Start
 async function initCamera() {
-    if(localStream) localStream.getTracks().forEach(track => track.stop());
+    if(localStream) localStream.getTracks().forEach(t => t.stop());
     localStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: currentFacingMode },
-        audio: true
+        video: { facingMode: currentFacingMode }, audio: true
     });
     document.getElementById("localVideo").srcObject = localStream;
     setupVoiceLighting(localStream);
@@ -105,92 +100,84 @@ function flipCamera() {
     initCamera();
 }
 
-// 3. Matching & Connecting Logic (FIXED)
-peer.on('open', (id) => {
+// 3. Connecting Logic (Firebase Matchmaking)
+peer.on('open', id => {
     myID = id;
-    db.ref("online_users/" + id).set({ status: "waiting" });
-    db.ref("online_users/" + id).onDisconnect().remove();
+    db.ref("users/" + id).set({ status: "idle" });
+    db.ref("users/" + id).onDisconnect().remove();
     updateOnlineCount();
-    matchUser();
+    matchUsers();
 });
 
-function matchUser() {
-    db.ref("online_users").once("value", (snapshot) => {
-        snapshot.forEach((child) => {
-            let userId = child.key;
-            let data = child.val();
-            if (userId !== myID && data.status === "waiting") {
-                // ಕನೆಕ್ಟ್ ಮಾಡಲು ಕಾಲ್ ಮಾಡುವುದು
-                let call = peer.call(userId, localStream);
-                db.ref("online_users/" + myID).update({ status: "busy" });
-                db.ref("online_users/" + userId).update({ status: "busy" });
-                handleCall(call);
+function matchUsers() {
+    db.ref("users").once("value", snap => {
+        snap.forEach(user => {
+            if (user.key !== myID && user.val().status === "idle") {
+                const call = peer.call(user.key, localStream);
+                db.ref("users/" + myID).update({ status: "busy" });
+                db.ref("users/" + user.key).update({ status: "busy" });
+                setupCall(call);
             }
         });
     });
 }
 
-peer.on('call', (call) => {
+peer.on('call', call => {
     call.answer(localStream);
-    handleCall(call);
+    setupCall(call);
 });
 
-function handleCall(call) {
-    call.on('stream', (remoteStream) => {
-        document.getElementById("remoteVideo").srcObject = remoteStream;
+function setupCall(call) {
+    call.on('stream', rs => {
+        document.getElementById("remoteVideo").srcObject = rs;
         document.getElementById("status").innerText = "Connected!";
     });
 }
 
-// 4. Online Count
-function updateOnlineCount() {
-    db.ref("online_users").on("value", (snap) => {
-        document.getElementById("count").innerText = snap.numChildren();
-    });
-}
-
-// 5. Voice Lighting
+// 4. Voice Border
 function setupVoiceLighting(stream) {
-    const audioContext = new AudioContext();
-    const analyser = audioContext.createAnalyser();
-    const source = audioContext.createMediaStreamSource(stream);
+    const audioCtx = new AudioContext();
+    const analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaStreamSource(stream);
     source.connect(analyser);
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-    function animate() {
-        analyser.getByteFrequencyData(dataArray);
-        let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-        if(volume > 30) document.getElementById("videoGrid").classList.add("voice-border");
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    function update() {
+        analyser.getByteFrequencyData(data);
+        let avg = data.reduce((a,b) => a+b)/data.length;
+        if(avg > 30) document.getElementById("videoGrid").classList.add("voice-border");
         else document.getElementById("videoGrid").classList.remove("voice-border");
-        requestAnimationFrame(animate);
+        requestAnimationFrame(update);
     }
-    animate();
+    update();
 }
 
-// 6. Drawing Logic
+// 5. Online Count
+function updateOnlineCount() {
+    db.ref("users").on("value", s => { document.getElementById("count").innerText = s.numChildren(); });
+}
+
+// 6. Drawing & Emojis
 const canvas = document.getElementById("magicCanvas");
 const ctx = canvas.getContext("2d");
 let isDrawing = false;
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-document.getElementById("drawBtn").onclick = () => {
+document.getElementById("drawBtn").onclick = function() {
     isDrawing = !isDrawing;
+    this.style.background = isDrawing ? "#ff0055" : "rgba(255,255,255,0.2)";
     canvas.style.pointerEvents = isDrawing ? "auto" : "none";
-    document.getElementById("drawBtn").style.background = isDrawing ? "#ff0055" : "rgba(255,255,255,0.2)";
 };
 
-canvas.onpointermove = (e) => {
+canvas.onpointermove = e => {
     if(isDrawing && e.buttons === 1) {
         ctx.fillStyle = "#55eefc";
-        ctx.fillRect(e.clientX, e.clientY, 6, 6);
+        ctx.fillRect(e.clientX, e.clientY, 5, 5);
     }
 };
-document.getElementById("clearBtn").onclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
 
-// Emoji Rain
 document.getElementById("emojiBtn").onclick = () => {
-    let panel = document.getElementById("emojiPanel");
-    panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+    let p = document.getElementById("emojiPanel");
+    p.style.display = p.style.display === "flex" ? "none" : "flex";
 };
 
 document.querySelectorAll(".emoji-item").forEach(item => {
@@ -205,7 +192,7 @@ document.querySelectorAll(".emoji-item").forEach(item => {
     };
 });
 
-document.getElementById("nextBtn").onclick = () => location.reload();
+document.getElementById("clearBtn").onclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
 
 initCamera();
 </script>
