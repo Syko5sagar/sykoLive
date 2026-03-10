@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+            <!DOCTYPE html>
 <html lang="kn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Syko Live Pro V3 - Final</title>
+<title>Syko Live Pro V3 - Lighting & Attractive Logo</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -13,16 +13,36 @@
 :root { --primary: #ff0055; --secondary: #55eefc; }
 body, html { margin:0; padding:0; background:#000; font-family:sans-serif; color:white; overflow:hidden; height: 100dvh; width: 100%; position: fixed; }
 
-/* ಎಂಟ್ರಿ ಲೋಗೋ */
-#entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:1000; }
-.letter { font-size: 40px; font-weight: bold; color: var(--primary); text-shadow: 0 0 15px var(--primary); opacity: 0; display: inline-block; animation: bounceIn 0.5s forwards; }
-@keyframes bounceIn { 0% { opacity:0; transform:scale(0.3); } 100% { opacity:1; transform:scale(1); } }
+/* --- ಅಟ್ರಾಕ್ಟಿವ್ ಎಂಟ್ರಿ ಲೋಗೋ (Glowing & Particle Effect) --- */
+#entry{ position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:1000; flex-direction: column; }
+#logoText { display: flex; gap: 5px; }
+.letter { 
+    font-size: 50px; font-weight: bold; color: #fff; 
+    text-shadow: 0 0 10px #fff, 0 0 20px var(--primary), 0 0 30px var(--primary), 0 0 40px var(--primary); 
+    opacity: 0; transform: translateY(20px); 
+    animation: glowIn 0.8s forwards; 
+}
+@keyframes glowIn { 
+    to { opacity: 1; transform: translateY(0); text-shadow: 0 0 15px #fff, 0 0 30px var(--primary), 0 0 45px var(--primary); } 
+}
+/* ಪಾರ್ಟಿಕಲ್ ಎಫೆಕ್ಟ್ */
+#entry::after {
+    content: ''; position: absolute; width: 200px; height: 200px; background: var(--primary); 
+    border-radius: 50%; filter: blur(100px); opacity: 0.3; animation: pulse 2s infinite;
+}
+@keyframes pulse { 0% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(1); opacity: 0.3; } }
+
+/* --- వాయ్స్ ಬಾರ್ಡರ್ ಲೈಟಿಂಗ್ ಸ್ಟೈಲ್ --- */
+.voice-glowing { 
+    box-shadow: 0 0 15px var(--secondary), 0 0 25px var(--secondary) !important; 
+    border-color: var(--secondary) !important; 
+    transition: 0.1s; 
+}
 
 .video-grid { position: relative; width: 100%; height: calc(100dvh - 75px); background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-#remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
-#localVideo { position: absolute; bottom: 20px; right: 15px; width: 110px; height: 150px; border: 2px solid var(--secondary); border-radius: 12px; z-index: 10; object-fit: cover; background: #222; }
+#remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; transition: 0.1s; border: 2px solid transparent; }
+#localVideo { position: absolute; bottom: 20px; right: 15px; width: 110px; height: 150px; border: 2px solid var(--primary); border-radius: 12px; z-index: 10; object-fit: cover; background: #222; transition: 0.1s; }
 
-/* ಡ್ರಾಯಿಂಗ್ ಕ್ಯಾನ್ವಾಸ್ */
 #magicCanvas { position: absolute; top:0; left:0; width: 100%; height: 100%; z-index: 15; pointer-events: none; }
 
 .side-controls { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; z-index: 20; }
@@ -81,12 +101,12 @@ input { flex: 1; background: #222; border: none; padding: 12px; border-radius: 2
 </div>
 
 <script>
-// --- Firebase Config ---
+// --- Firebase Config (ನಿಮ್ಮ ಲಿಂಕ್ ಹಾಕಿ) ---
 const firebaseConfig = { databaseURL: "https://sykolive-846a3-default-rtdb.firebaseio.com/" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ಎಂಟ್ರಿ ಲೋಗೋ
+// ಎಂಟ್ರಿ ಆನಿಮೇಷನ್
 const logoContainer = document.getElementById("logoText");
 "SYKOLIVE".split("").forEach((c, i) => {
     const span = document.createElement("span");
@@ -94,18 +114,20 @@ const logoContainer = document.getElementById("logoText");
     span.style.animationDelay = `${i * 0.1}s`;
     logoContainer.appendChild(span);
 });
-setTimeout(() => { document.getElementById("entry").style.display = "none"; }, 3000);
+setTimeout(() => { document.getElementById("entry").style.display = "none"; }, 3500);
 
 let peer, localStream, myID, currentCall, conn, isDrawing = false, currentFacing = "user";
 let lastX = 0, lastY = 0;
+let localAudioAnalyser, remoteAudioAnalyser;
 
 async function init() {
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: currentFacing, width: { ideal: 640 }, height: { ideal: 480 } }, 
-            audio: true 
+            audio: { echoCancellation: true, noiseSuppression: true } 
         });
         document.getElementById("localVideo").srcObject = localStream;
+        setupVoiceDetection(localStream, "localVideo"); // ಲೋಕಲ್ ವಾಯ್ಸ್ ಡಿಟೆಕ್ಷನ್
         setupPeer();
     } catch (e) { alert("ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ!"); }
 }
@@ -152,29 +174,60 @@ function findMatch() {
 function setupCall(call) {
     currentCall = call;
     call.on('stream', rs => {
-        document.getElementById("remoteVideo").srcObject = rs;
+        const remoteVid = document.getElementById("remoteVideo");
+        remoteVid.srcObject = rs;
+        setupVoiceDetection(rs, "remoteVideo"); // ರಿಮೋಟ್ ವಾಯ್ಸ್ ಡಿಟೆಕ್ಷನ್
+        remoteVid.play().catch(e => console.log("Auto-play blocked"));
         document.getElementById("status").innerText = "Connected!";
     });
 }
 
-// 🔄 ಕ್ಯಾಮೆರಾ ಫ್ಲಿಪ್ (ವಾಯ್ಸ್ ಕಟ್ ಆಗದಂತೆ)
+// --- ವಾಯ್ಸ್ ಡಿಟೆಕ್ಷನ್ ಮತ್ತು ಬಾರ್ಡರ್ ಲೈಟಿಂಗ್ ---
+function setupVoiceDetection(stream, elementId) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const videoElement = document.getElementById(elementId);
+
+    function checkVolume() {
+        analyser.getByteFrequencyData(dataArray);
+        let values = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            values += dataArray[i];
+        }
+        let average = values / bufferLength;
+
+        // ಮಾತಾಡುತ್ತಿರುವಾಗ ಬಾರ್ಡರ್ ಲೈಟಿಂಗ್ ಆನ್ ಮಾಡಿ
+        if (average > 30) { 
+            videoElement.classList.add("voice-glowing");
+        } else {
+            videoElement.classList.remove("voice-glowing");
+        }
+        requestAnimationFrame(checkVolume);
+    }
+    checkVolume();
+}
+
+// ಫಂಕ್ಷನ್‌ಗಳು (ಕ್ಯಾಮರಾ, ಮೈಕ್, ಇತ್ಯಾದಿ)
 async function flipCamera() {
     currentFacing = currentFacing === "user" ? "environment" : "user";
-    const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing } });
+    const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing }, audio: true });
     const videoTrack = newStream.getVideoTracks()[0];
-    
     if(currentCall) {
         const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
         if(sender) sender.replaceTrack(videoTrack);
     }
-    
     localStream.getVideoTracks()[0].stop();
     localStream.removeTrack(localStream.getVideoTracks()[0]);
     localStream.addTrack(videoTrack);
     document.getElementById("localVideo").srcObject = localStream;
 }
 
-// 🎤 ಮ್ಯೂಟ್ / 🎥 ವಿಡಿಯೋ ಆಫ್
 function toggleMic() {
     const t = localStream.getAudioTracks()[0]; t.enabled = !t.enabled;
     document.getElementById("micBtn").classList.toggle("off", !t.enabled);
@@ -186,7 +239,6 @@ function toggleVid() {
     document.getElementById("vidBtn").innerText = t.enabled ? "🎥" : "🚫";
 }
 
-// ✏️ ಡ್ರಾಯಿಂಗ್ ಲೈನ್‌ಗಳು (ಸ್ಮೂತ್ ಆಗಿ)
 const canvas = document.getElementById("magicCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -212,7 +264,6 @@ function drawLine(x1, y1, x2, y2, color) {
 }
 function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
 
-// ಎಮೋಜಿ ಮತ್ತು ಚಾಟ್
 function toggleEmoji() {
     const p = document.getElementById("emojiPanel");
     p.style.display = p.style.display === "flex" ? "none" : "flex";
