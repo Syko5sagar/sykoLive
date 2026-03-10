@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Syko Live Pro V3 - Global Random Connect</title>
+<title>Syko Live Pro V3 - Flip & Random Fixed</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -114,7 +114,6 @@ const firebaseConfig = { databaseURL: "https://sykolive-846a3-default-rtdb.fireb
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ಎಂಟ್ರಿ ಆನಿಮೇಷನ್ ಲಾಜಿಕ್
 const logoContainer = document.getElementById("logoText");
 "SYKOLIVE".split("").forEach((c, i) => {
     const span = document.createElement("span");
@@ -126,6 +125,7 @@ setTimeout(() => { document.getElementById("entry").style.opacity = "0"; setTime
 
 let peer, localStream, myID, currentCall, conn, isDrawing = false, currentFacing = "user";
 let lastX = 0, lastY = 0;
+let lastStranger = null; 
 
 async function init() {
     try {
@@ -160,7 +160,7 @@ function setupPeer() {
     });
 }
 
-// --- 4. ರಾಂಡಮ್ ಕನೆಕ್ಷನ್ ಲಾಜಿಕ್ ---
+// --- 4. ರಾಂಡಮ್ ಕನೆಕ್ಷನ್ ಲಾಜಿಕ್ (Fixed & Smart) ---
 function findMatch() {
     document.getElementById("status").innerText = "ಹುಡುಕಲಾಗುತ್ತಿದೆ...";
     if(currentCall) currentCall.close();
@@ -169,20 +169,31 @@ function findMatch() {
     db.ref("online_users/" + myID).update({ status: "waiting" });
 
     db.ref("online_users").once("value", snapshot => {
-        let availableUsers = [];
+        let others = [];
         snapshot.forEach(child => {
             if (child.key !== myID && child.val().status === "waiting") {
-                availableUsers.push(child.key);
+                others.push(child.key);
             }
         });
 
-        if (availableUsers.length > 0) {
-            const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
-            db.ref("online_users/" + myID).update({ status: "busy" });
-            db.ref("online_users/" + randomUser).update({ status: "busy" });
+        // ಹೊಸಬರನ್ನು ಹುಡುಕುವ ಪ್ರಯತ್ನ (lastStranger ಬಿಟ್ಟು)
+        let potentialMatch = others.filter(id => id !== lastStranger);
+        let selectedUser = null;
 
-            conn = peer.connect(randomUser);
-            const call = peer.call(randomUser, localStream);
+        if (potentialMatch.length > 0) {
+            selectedUser = potentialMatch[Math.floor(Math.random() * potentialMatch.length)];
+        } else if (others.length > 0) {
+            // ಬೇರೆ ಯಾರೂ ಇಲ್ಲದಿದ್ದರೆ ಹಿಂದಿನವರಿಗೇ ಕನೆಕ್ಟ್ ಮಾಡಿ
+            selectedUser = others[0];
+        }
+
+        if (selectedUser) {
+            lastStranger = selectedUser;
+            db.ref("online_users/" + myID).update({ status: "busy" });
+            db.ref("online_users/" + selectedUser).update({ status: "busy" });
+
+            conn = peer.connect(selectedUser);
+            const call = peer.call(selectedUser, localStream);
             setupCall(call);
         }
     });
@@ -211,14 +222,15 @@ function setupVoiceDetection(stream, elementId) {
         analyser.getByteFrequencyData(dataArray);
         let avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
         const vid = document.getElementById(elementId);
-        if(avg > 30) vid.classList.add("voice-glowing");
-        else vid.classList.remove("voice-glowing");
+        if(vid) {
+            if(avg > 30) vid.classList.add("voice-glowing");
+            else vid.classList.remove("voice-glowing");
+        }
         requestAnimationFrame(check);
     }
     check();
 }
 
-// --- 5. ಅಟ್ರಾಕ್ಟಿವ್ ಎಮೋಜಿ ರೈನ್ ಅಪ್ಡೇಟ್ ---
 function toggleEmoji() {
     const p = document.getElementById("emojiPanel");
     p.style.display = p.style.display === "flex" ? "none" : "flex";
@@ -232,20 +244,18 @@ document.querySelectorAll(".emoji-item").forEach(el => {
 });
 
 function showRain(emoji) {
-    // ಈಗ 40 ಎಮೋಜಿಗಳು ಒಟ್ಟಿಗೆ ಬೀಳುತ್ತವೆ (More Intense)
     for(let i=0; i<40; i++) {
         setTimeout(() => {
             let s = document.createElement("span");
             s.className = "emoji-rain"; s.innerText = emoji;
             s.style.left = Math.random() * 100 + "vw";
-            s.style.fontSize = (Math.random() * 20 + 20) + "px"; // ರಾಂಡಮ್ ಸೈಜ್
+            s.style.fontSize = (Math.random() * 20 + 20) + "px";
             document.body.appendChild(s);
             setTimeout(() => s.remove(), 2500);
-        }, i * 50); // ಒಂದಾದ ಮೇಲೆ ಒಂದು ಸುರಿಯುವ ಎಫೆಕ್ಟ್
+        }, i * 50);
     }
 }
 
-// ಡ್ರಾಯಿಂಗ್ ಲೈನ್ ಫಿಕ್ಸ್
 const canvas = document.getElementById("magicCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -269,19 +279,32 @@ function drawLine(x1, y1, x2, y2, color) {
 }
 function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
 
-// ಇತರ ಕಂಟ್ರೋಲ್‌ಗಳು
+// --- 5. ಕ್ಯಾಮೆರಾ ಸ್ವಿಚ್ ಫಿಕ್ಸ್ (Flip Fix) ---
 async function flipCamera() {
-    currentFacing = currentFacing === "user" ? "environment" : "user";
-    const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing }, audio: true });
-    const videoTrack = newStream.getVideoTracks()[0];
-    if(currentCall) {
-        const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
-        if(sender) sender.replaceTrack(videoTrack);
+    currentFacing = (currentFacing === "user") ? "environment" : "user";
+    
+    // ಹಳೆಯ ಸ್ಟ್ರೀಮ್ ಟ್ರ್ಯಾಕ್‌ಗಳನ್ನು ಬಂದ್ ಮಾಡಿ
+    localStream.getTracks().forEach(track => track.stop());
+
+    try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: currentFacing, width: { ideal: 640 }, height: { ideal: 480 } }, 
+            audio: true 
+        });
+
+        localStream = newStream;
+        document.getElementById("localVideo").srcObject = localStream;
+
+        // ಕಾಲಿಂಗ್ ಹಂತದಲ್ಲಿ ಟ್ರ್ಯಾಕ್ ರೀಪ್ಲೇಸ್ ಮಾಡಿ
+        if (currentCall && currentCall.peerConnection) {
+            const videoSender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'video');
+            const audioSender = currentCall.peerConnection.getSenders().find(s => s.track.kind === 'audio');
+            if(videoSender) videoSender.replaceTrack(newStream.getVideoTracks()[0]);
+            if(audioSender) audioSender.replaceTrack(newStream.getAudioTracks()[0]);
+        }
+    } catch (err) {
+        console.error("Flip failed: ", err);
     }
-    localStream.getVideoTracks()[0].stop();
-    localStream.removeTrack(localStream.getVideoTracks()[0]);
-    localStream.addTrack(videoTrack);
-    document.getElementById("localVideo").srcObject = localStream;
 }
 
 function toggleMic() {
