@@ -1,2 +1,0 @@
-# sykoLive
-sykoLive 
