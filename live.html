@@ -9,50 +9,73 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background: #000; color: white; padding-top: 85px; }
-        .header { position: fixed; top: 0; width: 100%; background: #000; padding: 15px 20px; display: flex; justify-content: space-between; border-bottom: 3px solid #32cd32; z-index: 1000; }
-        .app-name { font-family: 'Playfair Display', serif; font-size: 26px; color: #32cd32; font-weight: 900; }
-        .user-card { background: #0d0d0d; border: 1px solid #222; border-radius: 35px; padding: 22px; margin-bottom: 25px; }
+        .header { position: fixed; top: 0; width: 100%; background: #000; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #32cd32; z-index: 1000; }
+        .app-name { font-family: 'Playfair Display', serif; font-size: 26px; color: #32cd32; font-weight: 900; cursor: pointer; }
+        .feed-container { padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .user-card { background: #0d0d0d; border: 1px solid #222; border-radius: 30px; padding: 20px; transition: 0.3s; }
+        .user-inner { display: flex; align-items: center; gap: 20px; }
         .user-img { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ff4d4d; object-fit: cover; }
-        .user-info h3 { color: #4da6ff; font-size: 21px; }
-        .price-tag { color: #ff007f; font-weight: 800; font-size: 19px; }
-        .book-now { width: 100%; background: #ff00e5; color: white; border: none; padding: 16px; border-radius: 20px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+        .user-info { flex: 1; }
+        .user-info h3 { color: #4da6ff; font-size: 21px; margin-bottom: 5px; }
+        .price-tag { color: #ff007f; font-weight: 800; font-size: 19px; display: block; margin-top: 5px; }
+        .book-now { width: 100%; background: #ff00e5; color: white; border: none; padding: 16px; border-radius: 20px; font-weight: 700; margin-top: 20px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+        .action-icons { display: flex; gap: 10px; margin-top: 10px; }
+        .icon-circle { width: 35px; height: 35px; background: #fff; color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="app-name" onclick="location.href='home.html'">Rent bf/gf</div>
-        <div style="font-size: 12px; color: #ff007f;">LIVE ಪಟ್ಟಿ</div>
+        <div style="font-size: 12px; color: #ff007f; font-weight: bold;"><i class="fa-solid fa-circle" style="font-size: 8px; color: red; margin-right: 5px;"></i>LIVE</div>
     </div>
+
     <div class="feed-container" id="profiles-list">
-        <p style="text-align:center; color:#444; margin-top:100px;">ಲೋಡ್ ಆಗುತ್ತಿದೆ...</p>
+        <p style="text-align:center; color:#444; margin-top:100px;">ಲೈವ್ ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಹುಡುಕಲಾಗುತ್ತಿದೆ...</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyCZl507ZDCKEEok8tn8GXoKaWdvhhSbNlQ", authDomain: "sykolive-846a3.firebaseapp.com", projectId: "sykolive-846a3" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCZl507ZDCKEEok8tn8GXoKaWdvhhSbNlQ", 
+            authDomain: "sykolive-846a3.firebaseapp.com", 
+            projectId: "sykolive-846a3" 
+        };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Real-time Update: ಎಲ್ಲ ಯೂಸರ್ ಪ್ರೊಫೈಲ್ ಒಂದರ ಕೆಳಗೊಂದು ಬರುತ್ತದೆ
         onSnapshot(collection(db, "users"), (snapshot) => {
             const list = document.getElementById('profiles-list');
             list.innerHTML = ""; 
+
+            if (snapshot.empty) {
+                list.innerHTML = "<p style='text-align:center; color: #666;'>ಇನ್ನೂ ಯಾರೂ ಪ್ರೊಫೈಲ್ ಕ್ರಿಯೇಟ್ ಮಾಡಿಲ್ಲ.</p>";
+                return;
+            }
+
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                list.innerHTML += `
+                const card = `
                     <div class="user-card">
-                        <div style="display:flex; align-items:center; gap:20px;">
+                        <div class="user-inner">
                             <img src="${data.profilePic || 'https://via.placeholder.com/150'}" class="user-img">
                             <div class="user-info">
-                                <h3>${data.name || 'User'}, ${data.age || '20'}</h3>
-                                <span class="price-tag">₹${data.rate || '500'} / Day</span>
+                                <h3>${data.name || 'User'}, ${data.age || '??'}</h3>
+                                <p style="font-size: 12px; color: #777;"><i class="fa-solid fa-location-dot"></i> Bengaluru</p>
+                                <span class="price-tag">₹${data.rate || '500'} / ದಿನಕ್ಕೆ</span>
+                            </div>
+                            <div class="action-icons">
+                                <div class="icon-circle"><i class="fa-solid fa-comment"></i></div>
+                                <div class="icon-circle"><i class="fa-solid fa-video"></i></div>
                             </div>
                         </div>
-                        <button class="book-now">ಈಗಲೇ ಬುಕ್ ಮಾಡಿ</button>
-                    </div>`;
+                        <button class="book-now" onclick="alert('ಬುಕಿಂಗ್ ಸಿಸ್ಟಮ್ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ!')">ಈಗಲೇ ಬುಕ್ ಮಾಡಿ</button>
+                    </div>
+                `;
+                list.innerHTML += card;
             });
-            if (snapshot.empty) list.innerHTML = "<p style='text-align:center;'>ಯಾರೂ ಲೈವ್ ಇಲ್ಲ.</p>";
         });
     </script>
 </body>
