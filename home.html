@@ -1,4 +1,4 @@
-                }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="kn">
 <head>
     <meta charset="UTF-8">
@@ -46,6 +46,7 @@
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // Firebase ಕಾನ್ಫಿಗರೇಶನ್
         const firebaseConfig = { 
             apiKey: "AIzaSyCZl507ZDCKEEok8tn8GXoKaWdvhhSbNlQ", 
             authDomain: "sykolive-846a3.firebaseapp.com", 
@@ -58,7 +59,7 @@
         const preview = document.getElementById('preview');
         const plus = document.getElementById('plus');
 
-        // ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮತ್ತು ಪ್ರಿವ್ಯೂ
+        // ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮತ್ತು ಪ್ರಿವ್ಯೂ ಲಾಜಿಕ್
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -72,7 +73,7 @@
             }
         });
 
-        // ಹಳೆಯ ಡೇಟಾ ಇದ್ದರೆ ಲೋಡ್ ಮಾಡುವುದು
+        // ಹಳೆಯ ಡೇಟಾ ಇದ್ದರೆ ಅದನ್ನು ಫಾರ್ಮ್‌ನಲ್ಲಿ ತುಂಬಲು
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const docSnap = await getDoc(doc(db, "users", user.uid));
@@ -90,7 +91,7 @@
             }
         });
 
-        // ಸೇವ್ ಬಟನ್ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿದಾಗ
+        // ಸೇವ್ ಬಟನ್ ಒತ್ತಿದಾಗ ನಡೆಯುವ ಕೆಲಸ
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const user = auth.currentUser;
             const name = document.getElementById('userName').value;
@@ -98,8 +99,9 @@
             const rate = document.getElementById('userRate').value;
             const pic = preview.src;
 
+            // ವ್ಯಾಲಿಡೇಶನ್ (ಏನನ್ನಾದರೂ ಬಿಟ್ಟಿದ್ದರೆ ತಿಳಿಸಲು)
             if (!name || !age || !pic || pic === "" || pic.includes("window.location")) {
-                alert("ದಯವಿಟ್ಟು ಫೋಟೋ ಮತ್ತು ಎಲ್ಲ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ!");
+                alert("ದಯವಿಟ್ಟು ಫೋಟೋ ಮತ್ತು ವಿವರಗಳನ್ನು ಪೂರ್ತಿಯಾಗಿ ಭರ್ತಿ ಮಾಡಿ!");
                 return;
             }
 
@@ -107,20 +109,26 @@
             document.getElementById('saveBtn').disabled = true;
 
             try {
-                // Firebase ನಲ್ಲಿ ಎಲ್ಲ ವಿವರಗಳನ್ನು ಸೇವ್ ಮಾಡುವುದು (UID ಸೇರಿದಂತೆ)
+                // 1. Firebase Firestore ನಲ್ಲಿ ಡೇಟಾ ಸೇವ್ ಮಾಡುವುದು
                 await setDoc(doc(db, "users", user.uid), {
                     name: name,
                     age: age,
                     rate: rate,
                     profilePic: pic,
                     email: user.email,
-                    uid: user.uid, // ಇದು ಚಾಟಿಂಗ್ ಮತ್ತು ವಿಡಿಯೋ ಕಾಲಿಂಗ್‌ಗೆ ಅವಶ್ಯಕ
+                    uid: user.uid, // ಚಾಟ್/ಕಾಲ್‌ಗೆ ಇದು ಮುಖ್ಯ
                     status: "online",
                     timestamp: new Date().getTime()
                 });
 
-                // ಸೇವ್ ಆದ ನಂತರ ಹೋಮ್ ಪೇಜ್‌ಗೆ ಹೋಗುತ್ತದೆ
+                // 2. ತಕ್ಷಣವೇ ಲೋಕಲ್ ಆಗಿ ಅಪ್‌ಡೇಟ್ ಆಗಲು ಸ್ಟೋರೇಜ್ ಬಳಕೆ
+                localStorage.setItem("myProfilePic", pic);
+                localStorage.setItem("myName", name);
+                localStorage.setItem("myRate", rate);
+
+                // 3. ಸೇವ್ ಆದ ನಂತರ ಹೋಮ್ ಪೇಜ್‌ಗೆ ಹೋಗುವುದು
                 window.location.href = "home.html"; 
+
             } catch (error) {
                 alert("ಸೇವ್ ಮಾಡಲು ದೋಷ ಉಂಟಾಗಿದೆ: " + error.message);
                 document.getElementById('loader').style.display = 'none';
