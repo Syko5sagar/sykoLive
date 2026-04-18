@@ -3,42 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rent bf/gf - Home</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Profile Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #000; color: white; padding-top: 80px; }
-        .header { position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.9); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #32cd32; z-index: 1000; backdrop-filter: blur(10px); }
-        .app-name { font-family: 'Playfair Display', serif; font-size: 24px; color: #32cd32; font-weight: 900; }
-        .feed-container { padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        .profile-card { background: #0a0a0a; border: 1px solid #222; border-radius: 25px; padding: 20px; transition: 0.3s; }
-        .profile-main { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #ff4d4d; object-fit: cover; }
-        .profile-info h3 { color: #4da6ff; font-size: 20px; }
-        .profile-rate { color: #ff007f; font-weight: bold; font-size: 18px; margin-top: 5px; }
-        .book-btn { width: 100%; background: #ff007f; color: white; border: none; padding: 14px; border-radius: 18px; font-weight: 600; cursor: pointer; text-transform: uppercase; }
-        .nav-btn { background: #32cd32; color: black; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        body { background: #000; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .setup-container { background: #0a0a0a; padding: 30px; border-radius: 35px; border: 1px solid #222; width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(50, 205, 50, 0.1); }
+        .profile-upload { width: 110px; height: 110px; margin: 0 auto 20px; border: 2px solid #32cd32; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; position: relative; background: #111; }
+        .profile-upload img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-upload span { font-size: 40px; color: #32cd32; }
+        input, select { width: 100%; padding: 14px; margin: 12px 0; border-radius: 15px; border: 1px solid #333; background: #151515; color: white; outline: none; font-size: 14px; }
+        .save-btn { width: 100%; background: linear-gradient(to right, #32cd32, #adff2f); color: black; border: none; padding: 15px; border-radius: 15px; font-weight: 800; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
+        .loading { display: none; color: #32cd32; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="app-name">Rent bf/gf</div>
-        <a href="live.html" class="nav-btn">LIVE ಪಟ್ಟಿ ನೋಡಿ</a>
-    </div>
-    <div class="feed-container">
-        <div class="profile-card">
-            <div class="profile-main">
-                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200" class="profile-pic">
-                <div class="profile-info">
-                    <h3>Priya, 22</h3>
-                    <p style="color: #888;"><i class="fa-solid fa-location-dot"></i> Bengaluru</p>
-                    <div class="profile-rate">₹1000 / Day</div>
-                </div>
-            </div>
-            <button class="book-btn">ಈಗಲೇ ಬುಕ್ ಮಾಡಿ</button>
+    <div class="setup-container">
+        <h2 style="color: #32cd32; margin-bottom: 20px;">ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಸೆಟ್ ಮಾಡಿ</h2>
+        
+        <div class="profile-upload" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+            <img id="preview" src="" style="display:none;">
+            <span id="plus">+</span>
         </div>
-        <p style="text-align: center; color: #444; font-size: 12px;">ಹೆಚ್ಚಿನ ಪ್ರೊಫೈಲ್‌ಗಳಿಗಾಗಿ LIVE ಬಟನ್ ಕ್ಲಿಕ್ ಮಾಡಿ</p>
+        <input type="file" id="fileInput" hidden accept="image/*">
+        
+        <input type="text" id="userName" placeholder="ನಿಮ್ಮ ಹೆಸರು">
+        <input type="number" id="userAge" placeholder="ನಿಮ್ಮ ವಯಸ್ಸು">
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#888; margin-left:5px;">ದಿನದ ರೇಟ್ ಆಯ್ಕೆ ಮಾಡಿ:</label>
+        <select id="userRate">
+            <option value="500">₹500 / Day</option>
+            <option value="1000">₹1000 / Day</option>
+            <option value="1500" selected>₹1500 / Day</option>
+        </select>
+        
+        <button class="save-btn" id="saveBtn">SAVE & CONTINUE</button>
+        <p class="loading" id="loader">ಸೇವ್ ಆಗುತ್ತಿದೆ, ದಯವಿಟ್ಟು ಕಾಯಿರಿ...</p>
     </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCZl507ZDCKEEok8tn8GXoKaWdvhhSbNlQ", 
+            authDomain: "sykolive-846a3.firebaseapp.com", 
+            projectId: "sykolive-846a3" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const preview = document.getElementById('preview');
+        const plus = document.getElementById('plus');
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                    plus.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('userName').value = data.name || "";
+                    document.getElementById('userAge').value = data.age || "";
+                    document.getElementById('userRate').value = data.rate || "1500";
+                    if (data.profilePic) {
+                        preview.src = data.profilePic;
+                        preview.style.display = 'block';
+                        plus.style.display = 'none';
+                    }
+                }
+            }
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            const name = document.getElementById('userName').value;
+            const age = document.getElementById('userAge').value;
+            const rate = document.getElementById('userRate').value;
+            const pic = preview.src;
+
+            if (!name || !age || !pic || pic === "") {
+                alert("ದಯವಿಟ್ಟು ಫೋಟೋ ಮತ್ತು ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ!");
+                return;
+            }
+
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('saveBtn').disabled = true;
+
+            try {
+                // Firebase ನಲ್ಲಿ ಡೇಟಾ ಸೇವ್ ಮಾಡುವುದು
+                await setDoc(doc(db, "users", user.uid), {
+                    name: name,
+                    age: age,
+                    rate: rate,
+                    profilePic: pic,
+                    email: user.email,
+                    uid: user.uid,
+                    timestamp: new Date().getTime()
+                });
+
+                // ಇಲ್ಲಿ ನೀವು ಹೇಳಿದ "ನೆಕ್ಸ್ಟ್ ಪೇಜ್" ಹೆಸರು ಹಾಕಿ (ಉದಾ: home.html)
+                window.location.href = "home.html"; 
+            } catch (error) {
+                alert("Error: " + error.message);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('saveBtn').disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
