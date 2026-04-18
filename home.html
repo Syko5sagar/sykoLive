@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent bf/gf - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #000; color: white; padding-top: 80px; }
+        .header { position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.8); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #32cd32; z-index: 1000; }
+        .app-name { font-family: 'Playfair Display', serif; font-size: 24px; color: #32cd32; font-weight: 900; cursor: pointer; }
+        .feed-container { padding: 15px; display: flex; flex-direction: column; gap: 20px; }
+        .profile-card { background: #0a0a0a; border: 1px solid #222; border-radius: 25px; padding: 15px; }
+        .profile-main { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .profile-pic { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #ff4d4d; object-fit: cover; }
+        .profile-info h3 { color: #4da6ff; }
+        .profile-rate { color: #ff007f; font-weight: bold; }
+        .book-btn { width: 100%; background: #ff007f; color: white; border: none; padding: 12px; border-radius: 15px; font-weight: 600; cursor: pointer; }
+        .nav-btn { background: #32cd32; color: black; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="app-name">Rent bf/gf</div>
+        <a href="live.html" class="nav-btn">LIVE ಪ್ರೊಫೈಲ್ ನೋಡಿ</a>
+    </div>
+    <div class="feed-container">
+        <div class="profile-card">
+            <div class="profile-main">
+                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200" class="profile-pic">
+                <div class="profile-info">
+                    <h3>Priya, 22</h3>
+                    <p>Bengaluru</p>
+                    <div class="profile-rate">₹1000 / Day</div>
+                </div>
+            </div>
+            <button class="book-btn">ಈಗಲೇ ಬುಕ್ ಮಾಡಿ</button>
+        </div>
+    </div>
+</body>
+</html>
