@@ -3,48 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rent bf/gf - Live Feed</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+    <title>Rent bf/gf - Connect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #000; color: white; padding-top: 85px; }
+        body { background: #000; color: white; padding-top: 80px; }
         
-        .header { position: fixed; top: 0; width: 100%; background: #000; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #32cd32; z-index: 1000; }
-        .app-name { font-family: 'Playfair Display', serif; font-size: 22px; color: #32cd32; font-weight: 900; }
+        /* ಹಸಿರು ಬಾರ್ಡರ್ ಹೆಡರ್ */
+        .header { position: fixed; top: 0; width: 100%; background: #000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #32cd32; z-index: 1000; }
+        .app-name { font-size: 22px; color: #32cd32; font-weight: 800; font-style: italic; }
         
-        /* ಹೆಡರ್‌ನಲ್ಲಿ ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಡಿಸೈನ್ */
-        .my-profile-top { display: flex; align-items: center; gap: 10px; background: #111; padding: 5px 12px; border-radius: 25px; border: 1px solid #ff007f; cursor: pointer; }
-        .my-profile-top img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid #fff; }
-        .my-profile-top span { font-size: 12px; color: #ff007f; font-weight: bold; }
+        /* ಬಲಗಡೆ ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ */
+        .my-box { display: flex; align-items: center; gap: 8px; background: #111; padding: 4px 10px; border-radius: 20px; border: 1px solid #ff007f; }
+        .my-box img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        .my-box span { font-size: 11px; color: #ff007f; font-weight: bold; }
 
-        .feed-container { padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .feed { padding: 15px; max-width: 450px; margin: 0 auto; }
         
-        .user-card { background: #0d0d0d; border: 1px solid #222; border-radius: 30px; padding: 15px; transition: 0.3s; }
-        .user-inner { display: flex; align-items: center; gap: 15px; }
-        .user-img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ff4d4d; object-fit: cover; }
+        /* ಪ್ರೊಫೈಲ್ ಕಾರ್ಡ್ */
+        .card { background: #0d0d0d; border: 1px solid #222; border-radius: 25px; padding: 15px; margin-bottom: 20px; }
+        .card-top { display: flex; align-items: center; gap: 15px; }
+        .user-pic { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #ff4d4d; object-fit: cover; }
         
-        .user-info { flex: 1; }
-        .user-info h3 { color: #4da6ff; font-size: 18px; margin-bottom: 2px; }
-        .price-tag { color: #ff007f; font-weight: 800; font-size: 16px; display: block; }
+        .user-details { flex: 1; }
+        .user-details h3 { color: #4da6ff; font-size: 18px; }
+        .rate { color: #ff007f; font-weight: bold; font-size: 15px; }
         
-        .action-icons { display: flex; gap: 10px; }
-        .icon-circle { width: 38px; height: 38px; background: #fff; color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; cursor: pointer; }
+        /* ಚಾಟ್ ಮತ್ತು ಕಾಲ್ ಐಕಾನ್‌ಗಳು */
+        .comm-icons { display: flex; gap: 10px; }
+        .btn-circle { width: 40px; height: 40px; background: #fff; color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; }
         
-        .book-now { width: 100%; background: #ff00e5; color: white; border: none; padding: 14px; border-radius: 18px; font-weight: 700; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+        .main-btn { width: 100%; background: #ff00e5; color: white; border: none; padding: 12px; border-radius: 15px; font-weight: bold; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="app-name">Rent bf/gf</div>
-        <div class="my-profile-top" onclick="location.href='profile.html'">
-            <img id="myTopImg" src="https://via.placeholder.com/50" alt="">
-            <span id="myTopName">Loading...</span>
+        <div class="my-box" onclick="location.href='profile.html'">
+            <img id="headPic" src="https://via.placeholder.com/30">
+            <span id="headName">User</span>
         </div>
     </div>
 
-    <div class="feed-container" id="profiles-list">
-        <p style="text-align:center; color:#444; margin-top:100px;">ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...</p>
+    <div class="feed" id="live-users">
+        <p style="text-align:center; color:#555;">ಹುಡುಕಲಾಗುತ್ತಿದೆ...</p>
     </div>
 
     <script type="module">
@@ -61,49 +64,60 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // 1. ಹೆಡರ್‌ನಲ್ಲಿ ಲಾಗಿನ್ ಆದವರ ಪ್ರೊಫೈಲ್ ತೋರಿಸಲು
+        // 1. ಹೆಡರ್ ಅಪ್‌ಡೇಟ್
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // ಮೊದಲು ಲೋಕಲ್ ಸ್ಟೋರೇಜ್‌ನಿಂದ ತೋರಿಸು (ವೇಗಕ್ಕಾಗಿ)
-                if(localStorage.getItem("myProfilePic")){
-                    document.getElementById('myTopImg').src = localStorage.getItem("myProfilePic");
-                    document.getElementById('myTopName').innerText = localStorage.getItem("myName");
-                }
-                // ಫೈರ್‌ಬೇಸ್‌ನಿಂದ ಅಪ್‌ಡೇಟ್ ಮಾಡು
-                const docSnap = await getDoc(doc(db, "users", user.uid));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('myTopImg').src = data.profilePic;
-                    document.getElementById('myTopName').innerText = data.name;
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (snap.exists()) {
+                    document.getElementById('headPic').src = snap.data().profilePic;
+                    document.getElementById('headName').innerText = snap.data().name;
                 }
             }
         });
 
-        // 2. ಎಲ್ಲರ ಲಿಸ್ಟ್ ತೋರಿಸಲು (Real-time)
+        // 2. ಎಲ್ಲರ ಲಿಸ್ಟ್ ಮತ್ತು ಸಂವಹನ ಐಕಾನ್‌ಗಳು
         onSnapshot(collection(db, "users"), (snapshot) => {
-            const list = document.getElementById('profiles-list');
-            list.innerHTML = ""; 
+            const container = document.getElementById('live-users');
+            container.innerHTML = ""; 
 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                list.innerHTML += `
-                    <div class="user-card">
-                        <div class="user-inner">
-                            <img src="${data.profilePic}" class="user-img">
-                            <div class="user-info">
-                                <h3>${data.name}, ${data.age}</h3>
-                                <span class="price-tag">₹${data.rate} / ದಿನಕ್ಕೆ</span>
+            snapshot.forEach((userDoc) => {
+                const u = userDoc.data();
+                // ಲಾಗಿನ್ ಆದವರೇ ಲಿಸ್ಟ್‌ನಲ್ಲಿ ಕಾಣಿಸಬಾರದು ಅಂದ್ರೆ ಕೆಳಗಿನ ಲೈನ್ ಬಳಸಿ
+                // if(u.uid === auth.currentUser.uid) return;
+
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="card-top">
+                            <img src="${u.profilePic}" class="user-pic">
+                            <div class="user-details">
+                                <h3>${u.name}, ${u.age}</h3>
+                                <span class="rate">₹${u.rate} / Day</span>
                             </div>
-                            <div class="action-icons">
-                                <div class="icon-circle" onclick="location.href='chat.html?uid=${data.uid}'"><i class="fa-solid fa-comment"></i></div>
-                                <div class="icon-circle" onclick="location.href='video.html?room=${data.uid}'"><i class="fa-solid fa-video"></i></div>
+                            <div class="comm-icons">
+                                <div class="btn-circle" onclick="openChat('${u.uid}', '${u.name}')">
+                                    <i class="fa-solid fa-comment"></i>
+                                </div>
+                                <div class="btn-circle" onclick="openVideo('${u.uid}')">
+                                    <i class="fa-solid fa-video"></i>
+                                </div>
                             </div>
                         </div>
-                        <button class="book-now">ಈಗಲೇ ಬುಕ್ ಮಾಡಿ</button>
+                        <button class="main-btn">ಈಗಲೇ ಬುಕ್ ಮಾಡಿ</button>
                     </div>
                 `;
             });
         });
+
+        // ಸಂವಹನ ನಡೆಸಲು ಫಂಕ್ಷನ್‌ಗಳು
+        window.openChat = (uid, name) => {
+            // ಇಲ್ಲಿ ಚಾಟ್ ಪೇಜ್‌ಗೆ ಆ ವ್ಯಕ್ತಿಯ ಐಡಿ ಕಳುಹಿಸಲಾಗುತ್ತದೆ
+            window.location.href = `chat.html?target=${uid}&name=${name}`;
+        };
+
+        window.openVideo = (uid) => {
+            // ಇಲ್ಲಿ ವಿಡಿಯೋ ಕಾಲ್ ರೂಮ್ ಐಡಿ ಕಳುಹಿಸಲಾಗುತ್ತದೆ
+            window.location.href = `video.html?room=${uid}`;
+        };
     </script>
 </body>
 </html>
