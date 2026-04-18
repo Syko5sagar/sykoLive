@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+                }<!DOCTYPE html>
 <html lang="kn">
 <head>
     <meta charset="UTF-8">
@@ -58,6 +58,7 @@
         const preview = document.getElementById('preview');
         const plus = document.getElementById('plus');
 
+        // ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮತ್ತು ಪ್ರಿವ್ಯೂ
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -71,6 +72,7 @@
             }
         });
 
+        // ಹಳೆಯ ಡೇಟಾ ಇದ್ದರೆ ಲೋಡ್ ಮಾಡುವುದು
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const docSnap = await getDoc(doc(db, "users", user.uid));
@@ -88,6 +90,7 @@
             }
         });
 
+        // ಸೇವ್ ಬಟನ್ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿದಾಗ
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const user = auth.currentUser;
             const name = document.getElementById('userName').value;
@@ -95,8 +98,8 @@
             const rate = document.getElementById('userRate').value;
             const pic = preview.src;
 
-            if (!name || !age || !pic || pic === "") {
-                alert("ದಯವಿಟ್ಟು ಫೋಟೋ ಮತ್ತು ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ!");
+            if (!name || !age || !pic || pic === "" || pic.includes("window.location")) {
+                alert("ದಯವಿಟ್ಟು ಫೋಟೋ ಮತ್ತು ಎಲ್ಲ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ!");
                 return;
             }
 
@@ -104,21 +107,22 @@
             document.getElementById('saveBtn').disabled = true;
 
             try {
-                // Firebase ನಲ್ಲಿ ಡೇಟಾ ಸೇವ್ ಮಾಡುವುದು
+                // Firebase ನಲ್ಲಿ ಎಲ್ಲ ವಿವರಗಳನ್ನು ಸೇವ್ ಮಾಡುವುದು (UID ಸೇರಿದಂತೆ)
                 await setDoc(doc(db, "users", user.uid), {
                     name: name,
                     age: age,
                     rate: rate,
                     profilePic: pic,
                     email: user.email,
-                    uid: user.uid,
+                    uid: user.uid, // ಇದು ಚಾಟಿಂಗ್ ಮತ್ತು ವಿಡಿಯೋ ಕಾಲಿಂಗ್‌ಗೆ ಅವಶ್ಯಕ
+                    status: "online",
                     timestamp: new Date().getTime()
                 });
 
-                // ಇಲ್ಲಿ ನೀವು ಹೇಳಿದ "ನೆಕ್ಸ್ಟ್ ಪೇಜ್" ಹೆಸರು ಹಾಕಿ (ಉದಾ: home.html)
+                // ಸೇವ್ ಆದ ನಂತರ ಹೋಮ್ ಪೇಜ್‌ಗೆ ಹೋಗುತ್ತದೆ
                 window.location.href = "home.html"; 
             } catch (error) {
-                alert("Error: " + error.message);
+                alert("ಸೇವ್ ಮಾಡಲು ದೋಷ ಉಂಟಾಗಿದೆ: " + error.message);
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('saveBtn').disabled = false;
             }
