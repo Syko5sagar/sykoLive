@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rent bf/gf - Welcome</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&family=Great+Vibes&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -12,10 +12,8 @@
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .syko-container { display: flex; gap: 12px; }
         .syko-letter { font-size: 55px; font-weight: 800; color: #fff; opacity: 0; transform: translateY(10px); animation: letterAppear 0.6s ease-out forwards; }
-        .syko-letter:nth-child(1) { animation-delay: 0.2s; }
-        .syko-letter:nth-child(2) { animation-delay: 0.4s; }
-        .syko-letter:nth-child(3) { animation-delay: 0.6s; }
-        .syko-letter:nth-child(4) { animation-delay: 0.8s; }
+        .syko-letter:nth-child(1) { animation-delay: 0.2s; } .syko-letter:nth-child(2) { animation-delay: 0.4s; }
+        .syko-letter:nth-child(3) { animation-delay: 0.6s; } .syko-letter:nth-child(4) { animation-delay: 0.8s; }
         @keyframes letterAppear { 100% { opacity: 1; transform: translateY(0); text-shadow: 0 0 12px rgba(255, 255, 255, 0.4); } }
         .fade-out { animation: finalFade 0.6s ease-in forwards; animation-delay: 2.2s; }
         @keyframes finalFade { to { opacity: 0; visibility: hidden; } }
